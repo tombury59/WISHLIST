@@ -23,9 +23,9 @@ Membres : **Lilou, Sam, Tom, Théo, Maman, Papa**
 
 ### 3. Ajouter la base de données (pour partager la liste)
 - Dans ton projet Vercel : onglet **Storage** → **Create Database** → choisis
-  **KV / Upstash for Redis** (offre gratuite) → **Create**.
-- Clique **Connect** pour la relier à ton projet.
-  ➜ Vercel ajoute tout seul les variables `KV_REST_API_URL` et `KV_REST_API_TOKEN`.
+  **Upstash** → **Redis** (offre gratuite / Free) → **Create**.
+- Clique **Connect** pour la relier à ton projet `wishlist`.
+  ➜ Vercel ajoute tout seul les variables de connexion (`KV_...` ou `UPSTASH_...`).
 
 ### 4. Choisir le code PIN de la famille
 - Onglet **Settings → Environment Variables**.
