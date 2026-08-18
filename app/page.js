@@ -19,6 +19,8 @@ export default function Home() {
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  const [confirmData, setConfirmData] = useState(null); // { message, action }
+
   const pinRef = useRef("");
   useEffect(() => {
     pinRef.current = pin;
@@ -46,9 +48,31 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authed]);
 
+  // Synchronisation auto : on recharge régulièrement pour voir les ajouts
+  // des autres, sans avoir à rafraîchir la page à la main.
+  useEffect(() => {
+    if (!authed) return;
+    const refresh = () => {
+      if (document.visibilityState === "visible") {
+        fetchWishes(pinRef.current).catch(() => {});
+      }
+    };
+    const timer = setInterval(refresh, 7000);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed]);
+
   function pushDigit(d) {
     setError("");
     setPin((p) => (p.length < 12 ? p + d : p));
+  }
+
+  function askConfirm(message, action) {
+    setConfirmData({ message, action });
   }
 
   async function fetchWishes(code) {
@@ -166,6 +190,17 @@ export default function Home() {
     }).catch(() => {});
   }
 
+  // Demandes de suppression -> passent par la popup de confirmation.
+  function requestDeleteWish(member, wish) {
+    askConfirm(`Supprimer « ${wish.name} » ?`, () => deleteWish(member, wish.id));
+  }
+
+  function requestDeleteComment(member, wishId, comment) {
+    askConfirm("Supprimer ce commentaire ?", () =>
+      deleteComment(member, wishId, comment.id)
+    );
+  }
+
   // ---------- ÉCRAN DU CODE ----------
   if (!authed) {
     const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -277,9 +312,9 @@ export default function Home() {
                 key={w.id}
                 wish={w}
                 member={active}
-                onDelete={deleteWish}
+                onDelete={requestDeleteWish}
                 onAddComment={addComment}
-                onDeleteComment={deleteComment}
+                onDeleteComment={requestDeleteComment}
               />
             ))}
           </ul>
@@ -291,6 +326,17 @@ export default function Home() {
           items={history}
           loading={historyLoading}
           onClose={() => setHistoryOpen(false)}
+        />
+      )}
+
+      {confirmData && (
+        <ConfirmModal
+          message={confirmData.message}
+          onCancel={() => setConfirmData(null)}
+          onConfirm={() => {
+            confirmData.action();
+            setConfirmData(null);
+          }}
         />
       )}
     </main>
@@ -347,7 +393,7 @@ function WishItem({ wish, member, onDelete, onAddComment, onDeleteComment }) {
         </button>
         <button
           className="wish-del"
-          onClick={() => onDelete(member, wish.id)}
+          onClick={() => onDelete(member, wish)}
           aria-label="Supprimer"
           title="Supprimer"
         >
@@ -367,7 +413,7 @@ function WishItem({ wish, member, onDelete, onAddComment, onDeleteComment }) {
                   </div>
                   <button
                     className="comment-del"
-                    onClick={() => onDeleteComment(member, wish.id, c.id)}
+                    onClick={() => onDeleteComment(member, wish.id, c)}
                     aria-label="Supprimer le commentaire"
                     title="Supprimer"
                   >
@@ -432,6 +478,25 @@ function HistoryModal({ items, loading, onClose }) {
               ))}
             </ul>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- CONFIRMATION ----------
+function ConfirmModal({ message, onCancel, onConfirm }) {
+  return (
+    <div className="overlay" onClick={onCancel}>
+      <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
+        <p className="confirm-message">{message}</p>
+        <div className="confirm-actions">
+          <button className="btn-ghost" onClick={onCancel}>
+            Annuler
+          </button>
+          <button className="btn-danger" onClick={onConfirm}>
+            Supprimer
+          </button>
         </div>
       </div>
     </div>

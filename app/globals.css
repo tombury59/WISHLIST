@@ -629,6 +629,67 @@ body {
   white-space: nowrap;
 }
 
+/* ---------- POPUP DE CONFIRMATION ---------- */
+.confirm-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 22px 18px;
+  text-align: center;
+}
+
+.confirm-message {
+  margin: 0 0 20px;
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-ghost,
+.btn-danger {
+  flex: 1;
+  border-radius: 10px;
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn-ghost:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+.btn-danger {
+  background: var(--danger);
+  border: 1px solid var(--danger);
+  color: #1a0505;
+}
+
+.btn-danger:hover {
+  opacity: 0.9;
+}
+
+/* La popup de confirmation se centre verticalement */
+.overlay:has(.confirm-card) {
+  align-items: center;
+  padding-top: 16px;
+}
+
 @media (min-width: 520px) {
   .add-form {
     flex-direction: row;
