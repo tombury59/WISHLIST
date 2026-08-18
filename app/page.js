@@ -45,7 +45,7 @@ export default function Home() {
     } catch {
       sessionStorage.removeItem("family-pin");
       setAuthed(false);
-      setError("Code incorrect 🙈");
+      setError("Code incorrect");
     } finally {
       setLoading(false);
     }
@@ -74,7 +74,7 @@ export default function Home() {
       setName("");
       setLink("");
     } catch {
-      setError("Oups, impossible d'ajouter. Réessaie.");
+      setError("Impossible d'ajouter. Réessaie.");
     } finally {
       setAdding(false);
     }
@@ -98,8 +98,7 @@ export default function Home() {
     return (
       <main className="gate">
         <div className="gate-card">
-          <div className="gate-emoji">🎁</div>
-          <h1>Liste de souhaits</h1>
+          <h1 className="gate-title">Liste de souhaits</h1>
           <p className="gate-sub">Entre le code de la famille</p>
           <form
             onSubmit={(e) => {
@@ -127,26 +126,24 @@ export default function Home() {
   }
 
   // ---------- APPLI ----------
-  const activeMember = MEMBERS.find((m) => m.name === active);
   const list = wishes[active] || [];
 
   return (
     <main className="app">
       <header className="app-header">
-        <h1>🎁 Souhaits de la famille</h1>
+        <span className="app-brand">Liste de souhaits</span>
       </header>
 
       <nav className="tabs">
         {MEMBERS.map((m) => {
-          const count = (wishes[m.name] || []).length;
+          const count = (wishes[m] || []).length;
           return (
             <button
-              key={m.name}
-              className={"tab" + (m.name === active ? " tab-active" : "")}
-              onClick={() => setActive(m.name)}
+              key={m}
+              className={"tab" + (m === active ? " tab-active" : "")}
+              onClick={() => setActive(m)}
             >
-              <span className="tab-emoji">{m.emoji}</span>
-              <span className="tab-name">{m.name}</span>
+              {m}
               {count > 0 && <span className="tab-count">{count}</span>}
             </button>
           );
@@ -154,14 +151,10 @@ export default function Home() {
       </nav>
 
       <section className="panel">
-        <h2 className="panel-title">
-          {activeMember?.emoji} Souhaits de {active}
-        </h2>
-
         <form className="add-form" onSubmit={handleAdd}>
           <input
             className="field"
-            placeholder="Quel objet ? (ex: casque audio)"
+            placeholder="Un objet à ajouter…"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -174,18 +167,18 @@ export default function Home() {
             onChange={(e) => setLink(e.target.value)}
           />
           <button className="btn-primary" disabled={adding || !name.trim()}>
-            {adding ? "…" : "＋ Ajouter"}
+            {adding ? "…" : "Ajouter"}
           </button>
         </form>
 
         {list.length === 0 ? (
-          <p className="empty">Aucun souhait pour l'instant ✨</p>
+          <p className="empty">Aucun souhait pour l'instant.</p>
         ) : (
           <ul className="wish-list">
             {list.map((w) => (
               <li key={w.id} className="wish">
-                <div className="wish-main">
-                  <span className="wish-name">{w.name}</span>
+                <span className="wish-name">{w.name}</span>
+                <div className="wish-actions">
                   {w.link && (
                     <a
                       className="wish-link"
@@ -193,18 +186,18 @@ export default function Home() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      🔗 Voir
+                      Voir le lien
                     </a>
                   )}
+                  <button
+                    className="wish-del"
+                    onClick={() => handleDelete(active, w.id)}
+                    aria-label="Supprimer"
+                    title="Supprimer"
+                  >
+                    ×
+                  </button>
                 </div>
-                <button
-                  className="wish-del"
-                  onClick={() => handleDelete(active, w.id)}
-                  aria-label="Supprimer"
-                  title="Supprimer"
-                >
-                  ✕
-                </button>
               </li>
             ))}
           </ul>
