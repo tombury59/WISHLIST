@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { MEMBERS, MEMBER_NAMES } from "./lib/members";
 
+// Déconnexion automatique après 15 min sans activité (coupe le
+// rafraîchissement et revient à l'écran du code).
+const INACTIVITY_MS = 15 * 60 * 1000;
+
 export default function Home() {
   const [pin, setPin] = useState("");
   const [authed, setAuthed] = useState(false);
@@ -62,6 +66,35 @@ export default function Home() {
     return () => {
       clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed]);
+
+  // Déconnexion (inactivité) : on revient à l'écran du code, ce qui stoppe
+  // aussi le rafraîchissement auto.
+  function logout() {
+    sessionStorage.removeItem("family-pin");
+    setAuthed(false);
+    setPin("");
+    setHistoryOpen(false);
+    setConfirmData(null);
+    setError("");
+  }
+
+  // Minuteur d'inactivité : chaque interaction le remet à zéro.
+  useEffect(() => {
+    if (!authed) return;
+    let timer;
+    const reset = () => {
+      clearTimeout(timer);
+      timer = setTimeout(logout, INACTIVITY_MS);
+    };
+    const events = ["mousedown", "keydown", "touchstart", "scroll", "click"];
+    events.forEach((e) => window.addEventListener(e, reset, { passive: true }));
+    reset();
+    return () => {
+      clearTimeout(timer);
+      events.forEach((e) => window.removeEventListener(e, reset));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authed]);
