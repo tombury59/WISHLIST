@@ -764,7 +764,7 @@ body {
 
 .history-item {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 11px 0;
@@ -775,11 +775,39 @@ body {
   border-bottom: none;
 }
 
-.history-text {
+.history-main {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Bulle du nom, à la couleur du membre */
+.history-who {
+  flex: 0 0 auto;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* L'action (« a ajouté »…) en gris discret */
+.history-action {
+  flex: 0 0 auto;
+  font-size: 13px;
+  color: var(--faint);
+}
+
+/* L'élément concerné, mis en avant */
+.history-el {
   font-size: 14px;
   color: var(--text);
   min-width: 0;
-  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .history-time {

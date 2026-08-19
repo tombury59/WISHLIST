@@ -915,12 +915,31 @@ function HistoryModal({ items, loading, onClose }) {
             <p className="empty">Rien pour l'instant.</p>
           ) : (
             <ul className="history-list">
-              {items.map((h) => (
-                <li key={h.id} className="history-item">
-                  <span className="history-text">{describe(h)}</span>
-                  <span className="history-time">{timeAgo(h.at)}</span>
-                </li>
-              ))}
+              {/* Affichage limité aux 50 dernières (la base en garde plus). */}
+              {items.slice(0, 50).map((h) => {
+                const who = h.type === "comment" ? h.author || "Quelqu'un" : h.member;
+                const action =
+                  h.type === "add"
+                    ? "a ajouté"
+                    : h.type === "remove"
+                    ? "a retiré"
+                    : "a commenté";
+                return (
+                  <li key={h.id} className="history-item">
+                    <span className="history-main">
+                      <span
+                        className="history-who"
+                        style={{ background: avatarColor(who) }}
+                      >
+                        {who}
+                      </span>
+                      <span className="history-action">{action}</span>
+                      {h.name && <span className="history-el">{h.name}</span>}
+                    </span>
+                    <span className="history-time">{timeAgo(h.at)}</span>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -946,16 +965,6 @@ function ConfirmModal({ message, onCancel, onConfirm }) {
       </div>
     </div>
   );
-}
-
-function describe(h) {
-  if (h.type === "add") return `${h.member} a ajouté « ${h.name} »`;
-  if (h.type === "remove") return `${h.member} : « ${h.name} » retiré`;
-  if (h.type === "comment") {
-    const who = h.author ? h.author : "Quelqu'un";
-    return `${who} a commenté « ${h.name} »`;
-  }
-  return "Action";
 }
 
 function timeAgo(ts) {
