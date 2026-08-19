@@ -670,6 +670,18 @@ function WishItem({
         </span>
         <button
           type="button"
+          className={"wish-comment-btn" + (open ? " is-open" : "")}
+          onClick={() => setOpen((o) => !o)}
+          aria-label={open ? "Cacher les commentaires" : "Afficher les commentaires"}
+          title="Commentaires"
+        >
+          💬
+          {comments.length > 0 && (
+            <span className="wish-comment-count">{comments.length}</span>
+          )}
+        </button>
+        <button
+          type="button"
           className="wish-menu-btn"
           onClick={openMenuFromButton}
           aria-label="Ouvrir le menu"
@@ -834,7 +846,7 @@ function WishItem({
         </div>
       )}
 
-      {(open || comments.length > 0) && (
+      {open && (
         <div className="comments">
           {comments.length > 0 && (
             <ul className="comment-list">

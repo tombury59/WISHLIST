@@ -588,6 +588,55 @@ body {
   color: var(--danger);
 }
 
+/* Bouton 💬 pour afficher / cacher les commentaires (aligné avec ☰ et ×). */
+.wish-comment-btn {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 8px;
+  opacity: 0.75;
+  transition: opacity 0.15s, background 0.15s;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+.wish-comment-btn:hover {
+  opacity: 1;
+  background: var(--surface-2);
+}
+
+.wish-comment-btn.is-open {
+  opacity: 1;
+  background: var(--surface-3);
+}
+
+/* Petite pastille avec le nombre de commentaires. */
+.wish-comment-count {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
 /* Bouton ☰ qui ouvre le menu contextuel (remplace l'appui long sur mobile). */
 .wish-menu-btn {
   flex: 0 0 auto;
