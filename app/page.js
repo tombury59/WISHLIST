@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MEMBERS, MEMBER_NAMES, MEMBER_COLORS } from "./lib/members";
+import { REACTIONS } from "./lib/reactions";
 
 // Déconnexion automatique après 15 min sans activité (coupe le
 // rafraîchissement et revient à l'écran du code).
@@ -223,6 +224,31 @@ export default function Home() {
     }));
   }
 
+  // Bascule une réaction du profil courant sur un souhait. Mise à jour
+  // immédiate à l'écran (optimiste) puis envoi ; on ne relit rien, la synchro
+  // périodique existante s'occupe de propager aux autres appareils.
+  function toggleReaction(member, wishId, reaction) {
+    setWishes((prev) => ({
+      ...prev,
+      [member]: (prev[member] || []).map((w) => {
+        if (w.id !== wishId) return w;
+        const reactions = { ...(w.reactions || {}) };
+        const who = reactions[reaction] || [];
+        const next = who.includes(me)
+          ? who.filter((n) => n !== me)
+          : [...who, me];
+        if (next.length === 0) delete reactions[reaction];
+        else reactions[reaction] = next;
+        return { ...w, reactions };
+      }),
+    }));
+    fetch("/api/wishes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "x-family-pin": pin },
+      body: JSON.stringify({ member, wishId, reaction, author: me }),
+    }).catch(() => {});
+  }
+
   async function deleteComment(member, wishId, commentId) {
     setWishes((prev) => ({
       ...prev,
@@ -408,6 +434,7 @@ export default function Home() {
                 onDelete={requestDeleteWish}
                 onAddComment={addComment}
                 onDeleteComment={requestDeleteComment}
+                onToggleReaction={toggleReaction}
               />
             ))}
           </ul>
@@ -437,12 +464,93 @@ export default function Home() {
 }
 
 // ---------- UN SOUHAIT (avec commentaires) ----------
-function WishItem({ wish, member, me, canDeleteWish, onDelete, onAddComment, onDeleteComment }) {
+function WishItem({
+  wish,
+  member,
+  me,
+  canDeleteWish,
+  onDelete,
+  onAddComment,
+  onDeleteComment,
+  onToggleReaction,
+}) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
 
+  // Menu contextuel : ouvert par clic droit (PC) ou appui long (mobile).
+  // `menu` = position { x, y } où l'afficher, ou null si fermé.
+  const [menu, setMenu] = useState(null);
+  const pressTimer = useRef(null);
+  const longPressed = useRef(false);
+  const touchPos = useRef({ x: 0, y: 0 });
+
   const comments = wish.comments || [];
+  const reactions = wish.reactions || {};
+
+  // Ouvre le menu à (x, y), en le gardant dans l'écran.
+  function openAt(x, y) {
+    const w = 224;
+    const h = 230;
+    const px = Math.max(8, Math.min(x, window.innerWidth - w - 8));
+    const py = Math.max(8, Math.min(y, window.innerHeight - h - 8));
+    setMenu({ x: px, y: py });
+  }
+
+  function openMenu(e) {
+    e.preventDefault();
+    openAt(e.clientX, e.clientY);
+  }
+
+  function onTouchStart(e) {
+    const t = e.touches[0];
+    touchPos.current = { x: t.clientX, y: t.clientY };
+    longPressed.current = false;
+    pressTimer.current = setTimeout(() => {
+      longPressed.current = true;
+      openAt(touchPos.current.x, touchPos.current.y);
+    }, 450);
+  }
+
+  function cancelPress() {
+    clearTimeout(pressTimer.current);
+  }
+
+  // Après un appui long, on annule le "clic" qui suit (sinon un lien s'ouvrirait).
+  function onTouchEnd(e) {
+    clearTimeout(pressTimer.current);
+    if (longPressed.current) {
+      e.preventDefault();
+      longPressed.current = false;
+    }
+  }
+
+  function pick(reaction) {
+    onToggleReaction(member, wish.id, reaction);
+    setMenu(null);
+  }
+
+  function copyName() {
+    const text = wish.name;
+    try {
+      navigator.clipboard?.writeText(text);
+    } catch {
+      // Repli pour les navigateurs sans l'API presse-papier moderne.
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+      } catch {
+        /* ignore */
+      }
+      document.body.removeChild(ta);
+    }
+    setMenu(null);
+  }
 
   async function submit(e) {
     e.preventDefault();
@@ -462,7 +570,13 @@ function WishItem({ wish, member, me, canDeleteWish, onDelete, onAddComment, onD
 
   return (
     <li className="wish">
-      <div className="wish-row">
+      <div
+        className="wish-row"
+        onContextMenu={openMenu}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        onTouchMove={cancelPress}
+      >
         {wish.link && <LinkThumb link={wish.link} />}
         <span className="wish-name">
           {wish.link ? (
@@ -494,7 +608,84 @@ function WishItem({ wish, member, me, canDeleteWish, onDelete, onAddComment, onD
             ×
           </button>
         )}
+
+        {menu && (
+          <>
+            <div className="reaction-backdrop" onClick={() => setMenu(null)} />
+            <div
+              className="ctx-menu"
+              style={{ left: menu.x, top: menu.y }}
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              {wish.link && (
+                <button
+                  type="button"
+                  className="ctx-item"
+                  onClick={() => {
+                    window.open(normalizeUrl(wish.link), "_blank", "noopener");
+                    setMenu(null);
+                  }}
+                >
+                  Ouvrir le lien
+                </button>
+              )}
+              <button type="button" className="ctx-item" onClick={copyName}>
+                Copier le nom de l'objet
+              </button>
+              <button
+                type="button"
+                className="ctx-item"
+                onClick={() => {
+                  setOpen(true);
+                  setMenu(null);
+                }}
+              >
+                Ajouter un commentaire
+              </button>
+
+              <div className="ctx-sep" />
+
+              <div className="ctx-reactions">
+                {REACTIONS.map((r) => {
+                  const mine = (reactions[r] || []).includes(me);
+                  return (
+                    <button
+                      key={r}
+                      type="button"
+                      className={"reaction-choice" + (mine ? " reaction-choice-on" : "")}
+                      onClick={() => pick(r)}
+                    >
+                      {r}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
       </div>
+
+      {/* Badges des réactions déjà posées ; un clic bascule la tienne. */}
+      {REACTIONS.some((r) => (reactions[r] || []).length > 0) && (
+        <div className="reaction-bar">
+          {REACTIONS.filter((r) => (reactions[r] || []).length > 0).map((r) => {
+            const who = reactions[r] || [];
+            const mine = who.includes(me);
+            return (
+              <button
+                key={r}
+                type="button"
+                className={"reaction-badge" + (mine ? " reaction-badge-on" : "")}
+                onClick={() => onToggleReaction(member, wish.id, r)}
+                title={who.join(", ")}
+              >
+                <span className="reaction-emoji">{r}</span>
+                <span className="reaction-count">{who.length}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {open && (
         <div className="comments">

@@ -3,6 +3,12 @@ import "./globals.css";
 export const metadata = {
   title: "Liste de souhaits — Famille",
   description: "Les souhaits de toute la famille, au même endroit.",
+  // Ouverture en plein écran (sans barre du navigateur) sur iPhone.
+  appleWebApp: {
+    capable: true,
+    title: "Souhaits",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport = {
