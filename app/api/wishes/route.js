@@ -1,15 +1,8 @@
-import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 import { MEMBER_NAMES } from "../../lib/members";
+import { kv } from "../../lib/kv";
 
 export const dynamic = "force-dynamic";
-
-// On se connecte à la base Upstash. Selon la façon dont Vercel l'a branchée,
-// les variables peuvent s'appeler KV_... ou UPSTASH_... : on gère les deux.
-const kv = new Redis({
-  url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN,
-});
 
 const FAMILY_PIN = process.env.FAMILY_PIN || "1234";
 const HISTORY_KEY = "history";

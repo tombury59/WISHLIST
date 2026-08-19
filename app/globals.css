@@ -515,16 +515,13 @@ body {
   gap: 8px;
 }
 
-.comment-author-select {
+.comment-as {
   flex: 0 0 auto;
-  background: var(--surface-3);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
+  align-self: center;
+  color: var(--muted);
   font-size: 13px;
-  padding: 0 8px;
-  outline: none;
-  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .comment-input {
@@ -688,6 +685,115 @@ body {
 .overlay:has(.confirm-card) {
   align-items: center;
   padding-top: 16px;
+}
+
+/* ---------- CHOIX DU PROFIL (à la Netflix) ---------- */
+.profiles {
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+}
+
+.profiles-title {
+  margin: 0 0 32px;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px 16px;
+  justify-items: center;
+}
+
+.profile-tile {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+}
+
+.profile-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 700;
+  color: #fff;
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.profile-tile:hover .profile-avatar {
+  border-color: var(--text);
+  transform: scale(1.05);
+}
+
+.profile-name {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.profile-tile:hover .profile-name {
+  color: var(--text);
+}
+
+/* ---------- PUCE DU PROFIL (en-tête) ---------- */
+.me-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 12px 5px 5px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.me-chip:hover {
+  border-color: var(--border-strong);
+}
+
+.me-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.me-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Note affichée quand on regarde la liste d'un autre membre */
+.view-note {
+  margin: 0 0 18px;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
 }
 
 @media (min-width: 520px) {

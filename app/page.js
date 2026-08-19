@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MEMBERS, MEMBER_NAMES } from "./lib/members";
+import { MEMBERS, MEMBER_NAMES, MEMBER_COLORS } from "./lib/members";
 
 // Déconnexion automatique après 15 min sans activité (coupe le
 // rafraîchissement et revient à l'écran du code).
@@ -13,6 +13,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Qui suis-je ? (profil choisi, à la Netflix). Mémorisé dans le navigateur
+  // pour ne pas avoir à le resélectionner à chaque fois.
+  const [me, setMe] = useState(null);
   const [active, setActive] = useState(MEMBER_NAMES[0]);
   const [wishes, setWishes] = useState({});
   const [name, setName] = useState("");
@@ -31,6 +34,12 @@ export default function Home() {
   }, [pin]);
 
   useEffect(() => {
+    // Profil mémorisé (identité de cet appareil).
+    const savedMe = localStorage.getItem("family-me");
+    if (savedMe && MEMBER_NAMES.includes(savedMe)) {
+      setMe(savedMe);
+      setActive(savedMe);
+    }
     const saved = sessionStorage.getItem("family-pin");
     if (saved) {
       setPin(saved);
@@ -38,6 +47,13 @@ export default function Home() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Choix du profil : on le retient dans le navigateur et on ouvre sa liste.
+  function chooseMe(name) {
+    setMe(name);
+    setActive(name);
+    localStorage.setItem("family-me", name);
+  }
 
   // Support du clavier physique sur l'écran du code.
   useEffect(() => {
@@ -287,13 +303,49 @@ export default function Home() {
     );
   }
 
+  // ---------- QUI SOMMES-NOUS ? (choix du profil) ----------
+  if (!me) {
+    return (
+      <main className="gate">
+        <div className="profiles">
+          <h1 className="profiles-title">Qui es-tu ?</h1>
+          <div className="profile-grid">
+            {MEMBERS.map((m) => (
+              <button
+                key={m}
+                type="button"
+                className="profile-tile"
+                onClick={() => chooseMe(m)}
+              >
+                <span className="profile-avatar" style={{ background: avatarColor(m) }}>
+                  {m[0]}
+                </span>
+                <span className="profile-name">{m}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   // ---------- APPLI ----------
   const list = wishes[active] || [];
+  const isMine = active === me;
 
   return (
     <main className="app">
       <header className="app-header">
-        <span className="app-brand">Liste de souhaits</span>
+        <button
+          className="me-chip"
+          onClick={() => setMe(null)}
+          title="Changer de profil"
+        >
+          <span className="me-avatar" style={{ background: avatarColor(me) }}>
+            {me[0]}
+          </span>
+          <span className="me-name">{me}</span>
+        </button>
         <button className="history-btn" onClick={openHistory}>
           Historique
         </button>
@@ -316,25 +368,31 @@ export default function Home() {
       </nav>
 
       <section className="panel">
-        <form className="add-form" onSubmit={handleAdd}>
-          <input
-            className="field"
-            placeholder="Un objet à ajouter…"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-          <input
-            className="field"
-            type="url"
-            placeholder="Lien (facultatif)"
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-          />
-          <button className="btn-primary" disabled={adding || !name.trim()}>
-            {adding ? "…" : "Ajouter"}
-          </button>
-        </form>
+        {isMine ? (
+          <form className="add-form" onSubmit={handleAdd}>
+            <input
+              className="field"
+              placeholder="Un objet à ajouter…"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+            <input
+              className="field"
+              type="url"
+              placeholder="Lien (facultatif)"
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+            />
+            <button className="btn-primary" disabled={adding || !name.trim()}>
+              {adding ? "…" : "Ajouter"}
+            </button>
+          </form>
+        ) : (
+          <p className="view-note">
+            Tu regardes la liste de {active}. Tu ne peux ajouter que sur la tienne.
+          </p>
+        )}
 
         {list.length === 0 ? (
           <p className="empty">Aucun souhait pour l'instant.</p>
@@ -345,6 +403,8 @@ export default function Home() {
                 key={w.id}
                 wish={w}
                 member={active}
+                me={me}
+                canDeleteWish={isMine}
                 onDelete={requestDeleteWish}
                 onAddComment={addComment}
                 onDeleteComment={requestDeleteComment}
@@ -377,10 +437,9 @@ export default function Home() {
 }
 
 // ---------- UN SOUHAIT (avec commentaires) ----------
-function WishItem({ wish, member, onDelete, onAddComment, onDeleteComment }) {
+function WishItem({ wish, member, me, canDeleteWish, onDelete, onAddComment, onDeleteComment }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
-  const [author, setAuthor] = useState(MEMBERS[0]);
   const [sending, setSending] = useState(false);
 
   const comments = wish.comments || [];
@@ -391,7 +450,8 @@ function WishItem({ wish, member, onDelete, onAddComment, onDeleteComment }) {
     if (!t) return;
     setSending(true);
     try {
-      await onAddComment(member, wish.id, t, author);
+      // Le commentaire est automatiquement à ton nom (le profil choisi).
+      await onAddComment(member, wish.id, t, me);
       setText("");
     } catch {
       /* ignore */
@@ -424,14 +484,16 @@ function WishItem({ wish, member, onDelete, onAddComment, onDeleteComment }) {
         >
           {comments.length > 0 ? `Commentaires · ${comments.length}` : "Commenter"}
         </button>
-        <button
-          className="wish-del"
-          onClick={() => onDelete(member, wish)}
-          aria-label="Supprimer"
-          title="Supprimer"
-        >
-          ×
-        </button>
+        {canDeleteWish && (
+          <button
+            className="wish-del"
+            onClick={() => onDelete(member, wish)}
+            aria-label="Supprimer"
+            title="Supprimer"
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {open && (
@@ -444,31 +506,23 @@ function WishItem({ wish, member, onDelete, onAddComment, onDeleteComment }) {
                     {c.author && <span className="comment-author">{c.author}</span>}
                     <span className="comment-text">{c.text}</span>
                   </div>
-                  <button
-                    className="comment-del"
-                    onClick={() => onDeleteComment(member, wish.id, c)}
-                    aria-label="Supprimer le commentaire"
-                    title="Supprimer"
-                  >
-                    ×
-                  </button>
+                  {c.author === me && (
+                    <button
+                      className="comment-del"
+                      onClick={() => onDeleteComment(member, wish.id, c)}
+                      aria-label="Supprimer le commentaire"
+                      title="Supprimer"
+                    >
+                      ×
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
           )}
 
           <form className="comment-form" onSubmit={submit}>
-            <select
-              className="comment-author-select"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-            >
-              {MEMBERS.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+            <span className="comment-as">{me} :</span>
             <input
               className="field comment-input"
               placeholder="Ajouter un commentaire…"
@@ -607,4 +661,9 @@ function LinkThumb({ link }) {
 function normalizeUrl(url) {
   if (/^https?:\/\//i.test(url)) return url;
   return "https://" + url;
+}
+
+// Couleur d'avatar attribuée à chaque membre (repli gris si inconnu).
+function avatarColor(name) {
+  return MEMBER_COLORS[name] || "#3f3f46";
 }
