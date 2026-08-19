@@ -379,9 +379,6 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
-  /* Évite la sélection de texte / le menu système pendant l'appui long. */
-  -webkit-touch-callout: none;
-  user-select: none;
 }
 
 /* ---------- RÉACTIONS ---------- */
@@ -591,28 +588,34 @@ body {
   color: var(--danger);
 }
 
-/* Bouton commenter */
-.comment-toggle {
+/* Bouton ☰ qui ouvre le menu contextuel (remplace l'appui long sur mobile). */
+.wish-menu-btn {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
   background: transparent;
   border: none;
-  color: var(--faint);
-  font-size: 12px;
-  font-weight: 500;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
+  border-radius: 8px;
   transition: color 0.15s, background 0.15s;
+  /* Empêche la sélection/menu système sur l'icône. */
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
-.comment-toggle:hover {
+.wish-menu-btn:hover {
   color: var(--text);
   background: var(--surface-2);
 }
 
-.comment-toggle.has-comments {
-  color: var(--muted);
+.wish-menu-btn:active {
+  background: var(--surface-3);
 }
 
 /* Zone commentaires */

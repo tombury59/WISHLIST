@@ -523,12 +523,9 @@ function WishItem({
   const [editName, setEditName] = useState(wish.name);
   const [editLink, setEditLink] = useState(wish.link || "");
 
-  // Menu contextuel : ouvert par clic droit (PC) ou appui long (mobile).
+  // Menu contextuel : ouvert par clic droit (PC) ou par le bouton ☰ (mobile).
   // `menu` = position { x, y } où l'afficher, ou null si fermé.
   const [menu, setMenu] = useState(null);
-  const pressTimer = useRef(null);
-  const longPressed = useRef(false);
-  const touchPos = useRef({ x: 0, y: 0 });
 
   const comments = wish.comments || [];
   const reactions = wish.reactions || {};
@@ -547,47 +544,13 @@ function WishItem({
     openAt(e.clientX, e.clientY);
   }
 
-  function onTouchStart(e) {
-    // Un seul doigt : un multi-touch (pinch/zoom) ne doit pas ouvrir le menu.
-    if (e.touches.length !== 1) {
-      cancelPress();
-      return;
-    }
-    const t = e.touches[0];
-    touchPos.current = { x: t.clientX, y: t.clientY };
-    longPressed.current = false;
-    pressTimer.current = setTimeout(() => {
-      pressTimer.current = null;
-      longPressed.current = true;
-      // Petit retour haptique pour confirmer le déclenchement (si supporté).
-      if (navigator.vibrate) navigator.vibrate(12);
-      openAt(touchPos.current.x, touchPos.current.y);
-    }, 450);
-  }
-
-  // On n'annule l'appui long que si le doigt s'éloigne vraiment (scroll,
-  // glissement). Un micro-tremblement de quelques pixels est toléré, sinon
-  // le menu ne s'ouvre presque jamais.
-  function onTouchMove(e) {
-    if (pressTimer.current == null) return;
-    const t = e.touches[0];
-    const dx = Math.abs(t.clientX - touchPos.current.x);
-    const dy = Math.abs(t.clientY - touchPos.current.y);
-    if (dx > 10 || dy > 10) cancelPress();
-  }
-
-  function cancelPress() {
-    clearTimeout(pressTimer.current);
-    pressTimer.current = null;
-  }
-
-  // Après un appui long, on annule le "clic" qui suit (sinon un lien s'ouvrirait).
-  function onTouchEnd(e) {
-    clearTimeout(pressTimer.current);
-    if (longPressed.current) {
-      e.preventDefault();
-      longPressed.current = false;
-    }
+  // Ouverture par le bouton ☰ : on place le menu juste sous le bouton, aligné
+  // à droite. Remplace l'ancien appui long, capricieux sur mobile (surtout sur
+  // les titres-liens où le geste natif du navigateur volait l'appui).
+  function openMenuFromButton(e) {
+    e.stopPropagation();
+    const r = e.currentTarget.getBoundingClientRect();
+    openAt(r.right - 224, r.bottom + 6);
   }
 
   function pick(reaction) {
@@ -689,14 +652,7 @@ function WishItem({
           </div>
         </form>
       ) : (
-        <div
-          className="wish-row"
-          onContextMenu={openMenu}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-          onTouchMove={onTouchMove}
-          onTouchCancel={cancelPress}
-        >
+        <div className="wish-row" onContextMenu={openMenu}>
         {wish.link && <LinkThumb link={wish.link} />}
         <span className="wish-name">
           {wish.link ? (
@@ -713,10 +669,13 @@ function WishItem({
           )}
         </span>
         <button
-          className={"comment-toggle" + (comments.length ? " has-comments" : "")}
-          onClick={() => setOpen((o) => !o)}
+          type="button"
+          className="wish-menu-btn"
+          onClick={openMenuFromButton}
+          aria-label="Ouvrir le menu"
+          title="Menu"
         >
-          {comments.length > 0 ? `Commentaires · ${comments.length}` : "Commenter"}
+          ☰
         </button>
         {canEdit && (
           <button
@@ -875,7 +834,7 @@ function WishItem({
         </div>
       )}
 
-      {open && (
+      {(open || comments.length > 0) && (
         <div className="comments">
           {comments.length > 0 && (
             <ul className="comment-list">
