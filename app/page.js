@@ -611,11 +611,25 @@ function WishItem({
 
         {menu && (
           <>
-            <div className="reaction-backdrop" onClick={() => setMenu(null)} />
+            <div
+              className="reaction-backdrop"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenu(null);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setMenu(null);
+              }}
+            />
             <div
               className="ctx-menu"
               style={{ left: menu.x, top: menu.y }}
-              onContextMenu={(e) => e.preventDefault()}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
             >
               {wish.link && (
                 <button
