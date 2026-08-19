@@ -17,6 +17,10 @@ export default function Home() {
   // Qui suis-je ? (profil choisi, à la Netflix). Mémorisé dans le navigateur
   // pour ne pas avoir à le resélectionner à chaque fois.
   const [me, setMe] = useState(null);
+
+  // Objets « mis en évidence » — purement LOCAL (par appareil), stocké dans le
+  // navigateur. Ne change pas l'ordre, juste un léger surlignage perso.
+  const [highlights, setHighlights] = useState([]);
   const [active, setActive] = useState(MEMBER_NAMES[0]);
   const [wishes, setWishes] = useState({});
   const [name, setName] = useState("");
@@ -41,6 +45,12 @@ export default function Home() {
       setMe(savedMe);
       setActive(savedMe);
     }
+    try {
+      const h = JSON.parse(localStorage.getItem("family-highlights") || "[]");
+      if (Array.isArray(h)) setHighlights(h);
+    } catch {
+      /* ignore */
+    }
     const saved = sessionStorage.getItem("family-pin");
     if (saved) {
       setPin(saved);
@@ -54,6 +64,15 @@ export default function Home() {
     setMe(name);
     setActive(name);
     localStorage.setItem("family-me", name);
+  }
+
+  // Bascule la mise en évidence locale d'un objet (mémorisée par appareil).
+  function toggleHighlight(id) {
+    setHighlights((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      localStorage.setItem("family-highlights", JSON.stringify(next));
+      return next;
+    });
   }
 
   // Support du clavier physique sur l'écran du code.
@@ -194,6 +213,21 @@ export default function Home() {
     } finally {
       setAdding(false);
     }
+  }
+
+  // Modifie le nom / lien d'un souhait (mise à jour immédiate puis envoi).
+  function editWish(member, wishId, name, link) {
+    setWishes((prev) => ({
+      ...prev,
+      [member]: (prev[member] || []).map((w) =>
+        w.id === wishId ? { ...w, name, link } : w
+      ),
+    }));
+    fetch("/api/wishes", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "x-family-pin": pin },
+      body: JSON.stringify({ op: "edit", member, wishId, name, link }),
+    }).catch(() => {});
   }
 
   async function deleteWish(member, id) {
@@ -430,8 +464,11 @@ export default function Home() {
                 wish={w}
                 member={active}
                 me={me}
-                canDeleteWish={isMine}
+                canEdit={isMine}
+                highlighted={highlights.includes(w.id)}
                 onDelete={requestDeleteWish}
+                onEdit={editWish}
+                onToggleHighlight={toggleHighlight}
                 onAddComment={addComment}
                 onDeleteComment={requestDeleteComment}
                 onToggleReaction={toggleReaction}
@@ -468,8 +505,11 @@ function WishItem({
   wish,
   member,
   me,
-  canDeleteWish,
+  canEdit,
+  highlighted,
   onDelete,
+  onEdit,
+  onToggleHighlight,
   onAddComment,
   onDeleteComment,
   onToggleReaction,
@@ -477,6 +517,11 @@ function WishItem({
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+
+  // Édition en ligne du nom / lien.
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState(wish.name);
+  const [editLink, setEditLink] = useState(wish.link || "");
 
   // Menu contextuel : ouvert par clic droit (PC) ou appui long (mobile).
   // `menu` = position { x, y } où l'afficher, ou null si fermé.
@@ -491,7 +536,7 @@ function WishItem({
   // Ouvre le menu à (x, y), en le gardant dans l'écran.
   function openAt(x, y) {
     const w = 224;
-    const h = 230;
+    const h = 400;
     const px = Math.max(8, Math.min(x, window.innerWidth - w - 8));
     const py = Math.max(8, Math.min(y, window.innerHeight - h - 8));
     setMenu({ x: px, y: py });
@@ -530,12 +575,25 @@ function WishItem({
     setMenu(null);
   }
 
-  function copyName() {
-    const text = wish.name;
-    try {
-      navigator.clipboard?.writeText(text);
-    } catch {
-      // Repli pour les navigateurs sans l'API presse-papier moderne.
+  function startEdit() {
+    setEditName(wish.name);
+    setEditLink(wish.link || "");
+    setEditing(true);
+    setMenu(null);
+  }
+
+  function saveEdit(e) {
+    e.preventDefault();
+    const name = editName.trim();
+    if (!name) return;
+    onEdit(member, wish.id, name, editLink.trim());
+    setEditing(false);
+  }
+
+  function copyText(text) {
+    // Repli pour les navigateurs sans l'API presse-papier, ou si elle échoue
+    // (contexte non sécurisé, refus, etc.).
+    const fallback = () => {
       const ta = document.createElement("textarea");
       ta.value = text;
       ta.style.position = "fixed";
@@ -548,6 +606,16 @@ function WishItem({
         /* ignore */
       }
       document.body.removeChild(ta);
+    };
+    try {
+      if (navigator.clipboard?.writeText) {
+        // .catch gère le rejet ASYNCHRONE (sinon repli jamais appelé).
+        navigator.clipboard.writeText(text).catch(fallback);
+      } else {
+        fallback();
+      }
+    } catch {
+      fallback();
     }
     setMenu(null);
   }
@@ -569,14 +637,45 @@ function WishItem({
   }
 
   return (
-    <li className="wish">
-      <div
-        className="wish-row"
-        onContextMenu={openMenu}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-        onTouchMove={cancelPress}
-      >
+    <li className={"wish" + (highlighted ? " wish-highlight" : "")}>
+      {editing ? (
+        <form className="wish-edit" onSubmit={saveEdit}>
+          <input
+            className="field"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            placeholder="Nom de l'objet"
+            required
+            autoFocus
+          />
+          <input
+            className="field"
+            type="url"
+            value={editLink}
+            onChange={(e) => setEditLink(e.target.value)}
+            placeholder="Lien (facultatif)"
+          />
+          <div className="wish-edit-actions">
+            <button
+              type="button"
+              className="btn-ghost btn-sm"
+              onClick={() => setEditing(false)}
+            >
+              Annuler
+            </button>
+            <button className="btn-primary btn-sm" disabled={!editName.trim()}>
+              Enregistrer
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div
+          className="wish-row"
+          onContextMenu={openMenu}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          onTouchMove={cancelPress}
+        >
         {wish.link && <LinkThumb link={wish.link} />}
         <span className="wish-name">
           {wish.link ? (
@@ -598,7 +697,7 @@ function WishItem({
         >
           {comments.length > 0 ? `Commentaires · ${comments.length}` : "Commenter"}
         </button>
-        {canDeleteWish && (
+        {canEdit && (
           <button
             className="wish-del"
             onClick={() => onDelete(member, wish)}
@@ -631,6 +730,7 @@ function WishItem({
                 e.stopPropagation();
               }}
             >
+              {/* Catégorie : lien & copie */}
               {wish.link && (
                 <button
                   type="button"
@@ -643,9 +743,26 @@ function WishItem({
                   Ouvrir le lien
                 </button>
               )}
-              <button type="button" className="ctx-item" onClick={copyName}>
+              <button
+                type="button"
+                className="ctx-item"
+                onClick={() => copyText(wish.name)}
+              >
                 Copier le nom de l'objet
               </button>
+              {wish.link && (
+                <button
+                  type="button"
+                  className="ctx-item"
+                  onClick={() => copyText(normalizeUrl(wish.link))}
+                >
+                  Copier le lien de l'objet
+                </button>
+              )}
+
+              <div className="ctx-sep" />
+
+              {/* Catégorie : actions */}
               <button
                 type="button"
                 className="ctx-item"
@@ -656,9 +773,44 @@ function WishItem({
               >
                 Ajouter un commentaire
               </button>
+              <button
+                type="button"
+                className="ctx-item"
+                onClick={() => {
+                  onToggleHighlight(wish.id);
+                  setMenu(null);
+                }}
+              >
+                {highlighted ? "Retirer la mise en évidence" : "Mettre en évidence"}
+              </button>
+
+              {/* Catégorie : modifier / supprimer (sa propre liste) */}
+              {canEdit && (
+                <>
+                  <div className="ctx-sep" />
+                  <button
+                    type="button"
+                    className="ctx-item ctx-item-edit"
+                    onClick={startEdit}
+                  >
+                    Modifier
+                  </button>
+                  <button
+                    type="button"
+                    className="ctx-item ctx-item-danger"
+                    onClick={() => {
+                      onDelete(member, wish);
+                      setMenu(null);
+                    }}
+                  >
+                    Supprimer
+                  </button>
+                </>
+              )}
 
               <div className="ctx-sep" />
 
+              {/* Catégorie : réactions */}
               <div className="ctx-reactions">
                 {REACTIONS.map((r) => {
                   const mine = (reactions[r] || []).includes(me);
@@ -677,7 +829,8 @@ function WishItem({
             </div>
           </>
         )}
-      </div>
+        </div>
+      )}
 
       {/* Badges des réactions déjà posées ; un clic bascule la tienne. */}
       {REACTIONS.some((r) => (reactions[r] || []).length > 0) && (

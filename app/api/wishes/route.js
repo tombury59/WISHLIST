@@ -94,6 +94,23 @@ export async function PATCH(request) {
     return NextResponse.json({ error: "Requête invalide" }, { status: 400 });
   }
 
+  // ---- Modification (nom / lien) ----
+  if (body.op === "edit") {
+    const name = (body.name || "").trim();
+    const link = (body.link || "").trim();
+    if (!name) {
+      return NextResponse.json({ error: "Le nom est obligatoire" }, { status: 400 });
+    }
+    const wish = await kv.hget(keyFor(member), wishId);
+    if (!wish) {
+      return NextResponse.json({ error: "Souhait introuvable" }, { status: 404 });
+    }
+    wish.name = name;
+    wish.link = link;
+    await kv.hset(keyFor(member), { [wishId]: wish });
+    return NextResponse.json({ ok: true });
+  }
+
   // ---- Réaction ----
   if (reaction) {
     if (!REACTIONS.includes(reaction) || !author) {

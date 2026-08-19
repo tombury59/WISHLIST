@@ -349,6 +349,28 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+/* Mise en évidence LOCALE (par appareil) : léger surlignage, sans déplacer. */
+.wish-highlight {
+  background: rgba(245, 197, 24, 0.06);
+  box-shadow: inset 3px 0 0 0 #f5c518;
+  border-radius: 8px;
+  padding-left: 10px;
+}
+
+/* Formulaire d'édition en ligne d'un souhait */
+.wish-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.wish-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
 .wish:last-child {
   border-bottom: none;
 }
@@ -398,6 +420,14 @@ body {
 
 .ctx-item:hover {
   background: var(--surface);
+}
+
+.ctx-item-edit {
+  color: #f97316; /* orange */
+}
+
+.ctx-item-danger {
+  color: var(--danger); /* rouge */
 }
 
 .ctx-sep {

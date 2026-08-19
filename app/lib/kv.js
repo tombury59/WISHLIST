@@ -9,8 +9,12 @@ const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TO
 // configurée. Les données ne sont pas persistées (perdues au redémarrage du
 // serveur) — c'est juste pour pouvoir tester l'appli sans base.
 function createMemoryKv() {
-  const hashes = new Map(); // key -> Map(field -> value)
-  const lists = new Map(); // key -> array
+  // On accroche les données à globalThis pour qu'elles SURVIVENT aux
+  // rechargements de module de Next en dev (Fast Refresh). Sinon la « base »
+  // en mémoire se viderait à chaque édition de fichier.
+  const store = (globalThis.__memkv ||= { hashes: new Map(), lists: new Map() });
+  const hashes = store.hashes; // key -> Map(field -> value)
+  const lists = store.lists; // key -> array
 
   const clone = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
 
