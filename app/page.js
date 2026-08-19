@@ -548,17 +548,37 @@ function WishItem({
   }
 
   function onTouchStart(e) {
+    // Un seul doigt : un multi-touch (pinch/zoom) ne doit pas ouvrir le menu.
+    if (e.touches.length !== 1) {
+      cancelPress();
+      return;
+    }
     const t = e.touches[0];
     touchPos.current = { x: t.clientX, y: t.clientY };
     longPressed.current = false;
     pressTimer.current = setTimeout(() => {
+      pressTimer.current = null;
       longPressed.current = true;
+      // Petit retour haptique pour confirmer le déclenchement (si supporté).
+      if (navigator.vibrate) navigator.vibrate(12);
       openAt(touchPos.current.x, touchPos.current.y);
     }, 450);
   }
 
+  // On n'annule l'appui long que si le doigt s'éloigne vraiment (scroll,
+  // glissement). Un micro-tremblement de quelques pixels est toléré, sinon
+  // le menu ne s'ouvre presque jamais.
+  function onTouchMove(e) {
+    if (pressTimer.current == null) return;
+    const t = e.touches[0];
+    const dx = Math.abs(t.clientX - touchPos.current.x);
+    const dy = Math.abs(t.clientY - touchPos.current.y);
+    if (dx > 10 || dy > 10) cancelPress();
+  }
+
   function cancelPress() {
     clearTimeout(pressTimer.current);
+    pressTimer.current = null;
   }
 
   // Après un appui long, on annule le "clic" qui suit (sinon un lien s'ouvrirait).
@@ -674,7 +694,8 @@ function WishItem({
           onContextMenu={openMenu}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
-          onTouchMove={cancelPress}
+          onTouchMove={onTouchMove}
+          onTouchCancel={cancelPress}
         >
         {wish.link && <LinkThumb link={wish.link} />}
         <span className="wish-name">
