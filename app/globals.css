@@ -1039,11 +1039,325 @@ body {
   text-align: center;
 }
 
+/* ---------- SÉLECTEUR DE VUE (liste / carrousel) ---------- */
+.view-switch {
+  display: flex;
+  gap: 2px;
+  width: fit-content;
+  margin: 0 0 16px auto; /* aligné à droite */
+  padding: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.view-opt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.view-opt:hover {
+  color: var(--text);
+}
+
+.view-opt.is-active {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+/* ---------- CARROUSEL (Embla) ---------- */
+.carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.embla {
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+
+.embla {
+  cursor: grab;
+}
+
+.embla:active {
+  cursor: grabbing;
+}
+
+.embla__container {
+  display: flex;
+  gap: 10px;
+  align-items: center; /* les voisines réduites restent centrées verticalement */
+}
+
+.embla__slide {
+  flex: 0 0 74%;
+  min-width: 0;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+.carousel-arrow {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.carousel-arrow:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-3);
+}
+
+/* ---------- CARTE (format carrousel) ---------- */
+.wish-cardli {
+  padding: 0;
+  border-bottom: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.wish-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Aperçu en grand en haut de la carte */
+.thumb-big {
+  width: 100%;
+  height: 150px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--surface-3);
+}
+
+.thumb-image.thumb-big img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumb-favicon.thumb-big img {
+  width: 48px;
+  height: 48px;
+}
+
+.thumb-fallback.thumb-big {
+  font-size: 30px;
+}
+
+.wish-card-noimg {
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  background: var(--surface-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.wish-card-main {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wish-card .wish-name {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.wish-card-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Réactions & commentaires dans une carte : on remet un peu de marge interne */
+.wish-cardli .reaction-bar {
+  margin: 0 14px 12px;
+}
+
+.wish-cardli .comments {
+  margin: 0 14px 14px;
+}
+
+/* ---------- COMMENTAIRES : zone dédiée (en bas sur mobile, à droite desktop) ---------- */
+/* Mobile : flux vertical normal ; la zone arrive en dessous du panneau. */
+.comment-side {
+  margin-top: 16px;
+}
+
+/* La carte de commentaires : en-tête, zone défilante, formulaire */
+.comments--side {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+  overflow: hidden;
+  animation: slideUpComments 0.25s ease;
+}
+
+.comments-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.comments-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comments-close {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.comments-close:hover {
+  color: var(--text);
+}
+
+.comments--side .comments-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+.comments--side .comment-form {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.comments-empty {
+  margin: 0;
+  padding: 10px 0;
+  text-align: center;
+  color: var(--faint);
+  font-size: 14px;
+}
+
+@keyframes slideUpComments {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInComments {
+  from {
+    opacity: 0;
+    transform: translateX(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (min-width: 820px) {
+  .app {
+    max-width: 1000px;
+  }
+  /* Sans commentaires : une seule colonne centrée (comme avant). */
+  .app-main {
+    display: grid;
+    grid-template-columns: minmax(0, 620px);
+    justify-content: center;
+  }
+  /* Avec commentaires : 2 colonnes ; la zone de droite est placée sur la
+     MÊME ligne que le panneau -> même haut et même hauteur que lui. */
+  .app-main.has-comments {
+    grid-template-columns: minmax(0, 620px) 320px;
+    grid-template-rows: auto auto auto;
+    column-gap: 16px;
+  }
+  .app-main.has-comments .app-header {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .app-main.has-comments .tabs {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .app-main.has-comments .panel {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .comment-side {
+    grid-column: 2;
+    grid-row: 3;
+    position: relative;
+    align-self: stretch; /* remplit la hauteur de la ligne = hauteur du panneau */
+    margin-top: 0;
+  }
+  .comments--side {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    max-height: none;
+    animation: slideInComments 0.25s ease;
+  }
+}
+
 @media (min-width: 520px) {
   .add-form {
     flex-direction: row;
   }
   .add-form .field {
     flex: 1;
+  }
+  .embla__slide {
+    flex: 0 0 52%;
   }
 }
