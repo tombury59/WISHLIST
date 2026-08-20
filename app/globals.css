@@ -620,6 +620,13 @@ body {
   background: var(--surface-3);
 }
 
+.wish-comment-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  color: var(--text);
+}
+
 /* Petite pastille avec le nombre de commentaires. */
 .wish-comment-count {
   position: absolute;
