@@ -171,6 +171,7 @@ body {
   justify-content: center;
   transition: background 0.12s, border-color 0.12s, transform 0.05s;
   user-select: none;
+  touch-action: manipulation;
 }
 
 .key:hover {
@@ -925,9 +926,41 @@ body {
 }
 
 /* La popup de confirmation se centre verticalement */
-.overlay:has(.confirm-card) {
+.overlay:has(.confirm-card),
+.overlay:has(.edit-card) {
   align-items: center;
   padding-top: 16px;
+}
+
+/* ---------- POPUP DE MODIFICATION ---------- */
+.edit-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.edit-form .confirm-actions {
+  margin-top: 4px;
+}
+
+.edit-form .btn-primary {
+  flex: 1;
 }
 
 /* ---------- CHOIX DU PROFIL (à la Netflix) ---------- */
@@ -1210,9 +1243,14 @@ body {
 }
 
 /* ---------- COMMENTAIRES : zone dédiée (en bas sur mobile, à droite desktop) ---------- */
-/* Mobile : flux vertical normal ; la zone arrive en dessous du panneau. */
+/* Mobile : flux vertical normal ; la zone arrive en dessous du panneau.
+   Toujours dans le DOM : vide quand fermé -> aucun espace pris. */
 .comment-side {
   margin-top: 16px;
+}
+
+.comment-side:empty {
+  margin: 0;
 }
 
 /* La carte de commentaires : en-tête, zone défilante, formulaire */
@@ -1305,48 +1343,55 @@ body {
   }
 }
 
+/* Largeur animable de la 2e colonne (les custom properties typées <length>
+   s'animent, contrairement à grid-template-columns que Chrome n'interpole pas). */
 @media (min-width: 820px) {
   .app {
     max-width: 1000px;
   }
-  /* Sans commentaires : une seule colonne centrée (comme avant). */
+  /* La colonne (en-tête + onglets + rangée panneau) est centrée. */
   .app-main {
-    display: grid;
-    grid-template-columns: minmax(0, 620px);
+    display: flex;
     justify-content: center;
   }
-  /* Avec commentaires : 2 colonnes ; la zone de droite est placée sur la
-     MÊME ligne que le panneau -> même haut et même hauteur que lui. */
-  .app-main.has-comments {
-    grid-template-columns: minmax(0, 620px) 320px;
-    grid-template-rows: auto auto auto;
-    column-gap: 16px;
+  /* En-tête et onglets occupent toute la largeur de la colonne : ainsi, quand
+     les commentaires sont ouverts, « Historique » va à l'extrême droite
+     (bord droit de la zone commentaires), pas au milieu. */
+  /* Rangée : panneau + zone commentaires côte à côte, même hauteur. */
+  .panel-row {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
   }
-  .app-main.has-comments .app-header {
-    grid-column: 1;
-    grid-row: 1;
+  .panel {
+    flex: 1 1 620px;
+    min-width: 0;
+    max-width: 620px;
   }
-  .app-main.has-comments .tabs {
-    grid-column: 1;
-    grid-row: 2;
-  }
-  .app-main.has-comments .panel {
-    grid-column: 1;
-    grid-row: 3;
-  }
+  /* On anime la LARGEUR d'un flex item (fiable). La carte, de largeur fixe
+     ancrée à droite, est révélée par le clip -> glissement propre. Le panneau
+     se décale en douceur car la rangée s'élargit. */
   .comment-side {
-    grid-column: 2;
-    grid-row: 3;
+    flex: 0 0 auto;
     position: relative;
-    align-self: stretch; /* remplit la hauteur de la ligne = hauteur du panneau */
+    overflow: hidden;
+    width: 0;
     margin-top: 0;
+    margin-left: 0;
+    transition: width 0.32s ease, margin-left 0.32s ease;
+  }
+  .app-main.has-comments .comment-side {
+    width: 320px;
+    margin-left: 16px;
   }
   .comments--side {
     position: absolute;
-    inset: 0;
-    width: auto;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 320px;
     max-height: none;
-    animation: slideInComments 0.25s ease;
+    animation: none;
   }
 }
 

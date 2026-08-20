@@ -42,6 +42,7 @@ export default function Home() {
   const [historyLoading, setHistoryLoading] = useState(false);
 
   const [confirmData, setConfirmData] = useState(null); // { message, action }
+  const [editData, setEditData] = useState(null); // { member, wish }
 
   const pinRef = useRef("");
   useEffect(() => {
@@ -120,7 +121,7 @@ export default function Home() {
         fetchWishes(pinRef.current).catch(() => {});
       }
     };
-    const timer = setInterval(refresh, 7000);
+    const timer = setInterval(refresh, 15000);
     document.addEventListener("visibilitychange", refresh);
     return () => {
       clearInterval(timer);
@@ -253,6 +254,11 @@ export default function Home() {
     }).catch(() => {});
   }
 
+  // Ouvre la popup de modification.
+  function requestEditWish(member, wish) {
+    setEditData({ member, wish });
+  }
+
   async function deleteWish(member, id) {
     setWishes((prev) => ({
       ...prev,
@@ -356,19 +362,37 @@ export default function Home() {
 
           <div className="keypad">
             {keys.map((k) => (
-              <button key={k} type="button" className="key" onClick={() => pushDigit(k)}>
+              <button
+                key={k}
+                type="button"
+                className="key"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  pushDigit(k);
+                }}
+              >
                 {k}
               </button>
             ))}
             <button
               type="button"
               className="key key-ghost"
-              onClick={() => setPin((p) => p.slice(0, -1))}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                setPin((p) => p.slice(0, -1));
+              }}
               aria-label="Effacer"
             >
               ⌫
             </button>
-            <button type="button" className="key" onClick={() => pushDigit("0")}>
+            <button
+              type="button"
+              className="key"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                pushDigit("0");
+              }}
+            >
               0
             </button>
             <button
@@ -422,7 +446,7 @@ export default function Home() {
     me,
     canEdit: isMine,
     onDelete: requestDeleteWish,
-    onEdit: editWish,
+    onRequestEdit: requestEditWish,
     onToggleHighlight: toggleHighlight,
     onAddComment: addComment,
     onDeleteComment: requestDeleteComment,
@@ -438,6 +462,7 @@ export default function Home() {
   return (
     <main className="app">
       <div className={"app-main" + (commentWish ? " has-comments" : "")}>
+        <div className="app-col">
       <header className="app-header">
         <button
           className="me-chip"
@@ -473,6 +498,7 @@ export default function Home() {
         })}
       </nav>
 
+        <div className="panel-row">
         <section className="panel">
         {isMine ? (
           <form className="add-form" onSubmit={handleAdd}>
@@ -524,9 +550,11 @@ export default function Home() {
         )}
         </section>
 
-        {commentWish && (
-          <aside className="comment-side" key={commentWish.id}>
+        {/* Toujours présent (vide quand fermé) pour que l'ouverture s'anime. */}
+        <aside className="comment-side">
+          {commentWish && (
             <CommentsPanel
+              key={commentWish.id}
               wish={commentWish}
               member={active}
               me={me}
@@ -535,8 +563,10 @@ export default function Home() {
               onDeleteComment={requestDeleteComment}
               onClose={closeComments}
             />
-          </aside>
-        )}
+          )}
+        </aside>
+        </div>
+        </div>
       </div>
 
       {historyOpen && (
@@ -554,6 +584,17 @@ export default function Home() {
           onConfirm={() => {
             confirmData.action();
             setConfirmData(null);
+          }}
+        />
+      )}
+
+      {editData && (
+        <EditModal
+          wish={editData.wish}
+          onCancel={() => setEditData(null)}
+          onSave={(name, link) => {
+            editWish(editData.member, editData.wish.id, name, link);
+            setEditData(null);
           }}
         />
       )}
@@ -677,7 +718,7 @@ function WishItem({
   highlighted,
   variant = "list",
   onDelete,
-  onEdit,
+  onRequestEdit,
   onToggleHighlight,
   onAddComment,
   onDeleteComment,
@@ -688,11 +729,6 @@ function WishItem({
 }) {
   // Les commentaires ouverts sont pilotés par le parent (un seul à la fois).
   const open = openCommentsId === wish.id;
-
-  // Édition en ligne du nom / lien.
-  const [editing, setEditing] = useState(false);
-  const [editName, setEditName] = useState(wish.name);
-  const [editLink, setEditLink] = useState(wish.link || "");
 
   // Menu contextuel : ouvert par clic droit (PC) ou par le bouton ☰ (mobile).
   // `menu` = position { x, y } où l'afficher, ou null si fermé.
@@ -727,21 +763,6 @@ function WishItem({
   function pick(reaction) {
     onToggleReaction(member, wish.id, reaction);
     setMenu(null);
-  }
-
-  function startEdit() {
-    setEditName(wish.name);
-    setEditLink(wish.link || "");
-    setEditing(true);
-    setMenu(null);
-  }
-
-  function saveEdit(e) {
-    e.preventDefault();
-    const name = editName.trim();
-    if (!name) return;
-    onEdit(member, wish.id, name, editLink.trim());
-    setEditing(false);
   }
 
   function copyText(text) {
@@ -908,7 +929,10 @@ function WishItem({
             <button
               type="button"
               className="ctx-item ctx-item-edit"
-              onClick={startEdit}
+              onClick={() => {
+                onRequestEdit(member, wish);
+                setMenu(null);
+              }}
             >
               Modifier
             </button>
@@ -956,37 +980,7 @@ function WishItem({
         (variant === "card" ? " wish-cardli" : "")
       }
     >
-      {editing ? (
-        <form className="wish-edit" onSubmit={saveEdit}>
-          <input
-            className="field"
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            placeholder="Nom de l'objet"
-            required
-            autoFocus
-          />
-          <input
-            className="field"
-            type="url"
-            value={editLink}
-            onChange={(e) => setEditLink(e.target.value)}
-            placeholder="Lien (facultatif)"
-          />
-          <div className="wish-edit-actions">
-            <button
-              type="button"
-              className="btn-ghost btn-sm"
-              onClick={() => setEditing(false)}
-            >
-              Annuler
-            </button>
-            <button className="btn-primary btn-sm" disabled={!editName.trim()}>
-              Enregistrer
-            </button>
-          </div>
-        </form>
-      ) : variant === "card" ? (
+      {variant === "card" ? (
         <div className="wish-card" onContextMenu={openMenu}>
           {wish.link ? (
             <LinkThumb link={wish.link} big />
@@ -1190,6 +1184,52 @@ function ConfirmModal({ message, onCancel, onConfirm }) {
             Supprimer
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- MODIFICATION (popup) ----------
+function EditModal({ wish, onCancel, onSave }) {
+  const [name, setName] = useState(wish.name);
+  const [link, setLink] = useState(wish.link || "");
+
+  function submit(e) {
+    e.preventDefault();
+    const n = name.trim();
+    if (!n) return;
+    onSave(n, link.trim());
+  }
+
+  return (
+    <div className="overlay" onClick={onCancel}>
+      <div className="edit-card" onClick={(e) => e.stopPropagation()}>
+        <form className="edit-form" onSubmit={submit}>
+          <h3 className="edit-title">Modifier</h3>
+          <input
+            className="field"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nom de l'objet"
+            required
+            autoFocus
+          />
+          <input
+            className="field"
+            type="url"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            placeholder="Lien (facultatif)"
+          />
+          <div className="confirm-actions">
+            <button type="button" className="btn-ghost" onClick={onCancel}>
+              Annuler
+            </button>
+            <button className="btn-primary" disabled={!name.trim()}>
+              Enregistrer
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
