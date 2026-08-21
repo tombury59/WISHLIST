@@ -16,6 +16,7 @@ import MemberTabs from "./components/MemberTabs";
 import AddForm from "./components/AddForm";
 import ViewSwitch from "./components/ViewSwitch";
 import RefreshButton from "./components/RefreshButton";
+import ViewTransition from "./components/ViewTransition";
 import WishCarousel from "./components/WishCarousel";
 import WishItem from "./components/WishItem";
 import CommentsPanel from "./components/CommentsPanel";
@@ -183,20 +184,24 @@ export default function Home() {
 
               {list.length === 0 ? (
                 <p className="empty">Aucun souhait pour l'instant.</p>
-              ) : view === "carousel" ? (
-                <WishCarousel list={list} highlights={highlights} itemProps={itemProps} />
               ) : (
-                <ul className="wish-list">
-                  {list.map((w) => (
-                    <WishItem
-                      key={w.id}
-                      wish={w}
-                      variant="list"
-                      highlighted={highlights.includes(w.id)}
-                      {...itemProps}
-                    />
-                  ))}
-                </ul>
+                <ViewTransition trigger={view}>
+                  {view === "carousel" ? (
+                    <WishCarousel list={list} highlights={highlights} itemProps={itemProps} />
+                  ) : (
+                    <ul className="wish-list">
+                      {list.map((w) => (
+                        <WishItem
+                          key={w.id}
+                          wish={w}
+                          variant="list"
+                          highlighted={highlights.includes(w.id)}
+                          {...itemProps}
+                        />
+                      ))}
+                    </ul>
+                  )}
+                </ViewTransition>
               )}
             </section>
 

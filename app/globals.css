@@ -1187,6 +1187,22 @@ body {
   }
 }
 
+/* Transition d'entrée du contenu quand on change de vue (carrousel <-> liste) */
+.view-content.is-switching {
+  animation: view-swap-in 0.32s ease;
+}
+
+@keyframes view-swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* ---------- Micro-animations des icônes (vue & commentaire) ---------- */
 .view-ico {
   display: inline-flex;
