@@ -2,37 +2,18 @@ import { NextResponse } from "next/server";
 import { MEMBER_NAMES } from "../../lib/members";
 import { REACTIONS } from "../../lib/reactions";
 import { kv } from "../../lib/kv";
+import { checkPin, unauthorized } from "../_lib/auth";
+import { logHistory, newId } from "../_lib/history";
 
 export const dynamic = "force-dynamic";
-
-const FAMILY_PIN = process.env.FAMILY_PIN || "1234";
-const HISTORY_KEY = "history";
-
-function checkPin(request) {
-  const pin = request.headers.get("x-family-pin");
-  return pin && pin === FAMILY_PIN;
-}
 
 function keyFor(member) {
   return `wishes:${member}`;
 }
 
-function newId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
-
-// Ajoute une ligne dans l'historique (liste plafonnée à 200 entrées).
-async function logHistory(entry) {
-  const item = { id: newId(), at: Date.now(), ...entry };
-  await kv.lpush(HISTORY_KEY, item);
-  await kv.ltrim(HISTORY_KEY, 0, 199);
-}
-
 // GET /api/wishes  -> tous les souhaits de toute la famille
 export async function GET(request) {
-  if (!checkPin(request)) {
-    return NextResponse.json({ error: "Code incorrect" }, { status: 401 });
-  }
+  if (!checkPin(request)) return unauthorized();
 
   const result = {};
   for (const member of MEMBER_NAMES) {
@@ -48,9 +29,7 @@ export async function GET(request) {
 
 // POST /api/wishes  { member, name, link }  -> ajoute un souhait
 export async function POST(request) {
-  if (!checkPin(request)) {
-    return NextResponse.json({ error: "Code incorrect" }, { status: 401 });
-  }
+  if (!checkPin(request)) return unauthorized();
 
   const body = await request.json().catch(() => ({}));
   const member = (body.member || "").trim();
@@ -80,9 +59,7 @@ export async function POST(request) {
 // ne peut poser qu'une fois chaque réaction sur un souhait : re-cliquer la
 // retire (bascule).
 export async function PATCH(request) {
-  if (!checkPin(request)) {
-    return NextResponse.json({ error: "Code incorrect" }, { status: 401 });
-  }
+  if (!checkPin(request)) return unauthorized();
 
   const body = await request.json().catch(() => ({}));
   const member = (body.member || "").trim();
@@ -154,9 +131,7 @@ export async function PATCH(request) {
 //   { member, id }                 -> supprime un souhait
 //   { member, wishId, commentId }  -> supprime un commentaire
 export async function DELETE(request) {
-  if (!checkPin(request)) {
-    return NextResponse.json({ error: "Code incorrect" }, { status: 401 });
-  }
+  if (!checkPin(request)) return unauthorized();
 
   const body = await request.json().catch(() => ({}));
   const member = (body.member || "").trim();
