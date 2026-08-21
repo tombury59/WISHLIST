@@ -10,6 +10,7 @@ import { useView } from "./hooks/useView";
 import { useIsMobile } from "./hooks/useIsMobile";
 import Gate from "./components/Gate";
 import ProfilePicker from "./components/ProfilePicker";
+import ProfilePinGate from "./components/ProfilePinGate";
 import AppHeader from "./components/AppHeader";
 import MemberTabs from "./components/MemberTabs";
 import AddForm from "./components/AddForm";
@@ -32,6 +33,9 @@ export default function Home() {
   const isMobile = useIsMobile();
   const historyApi = useHistory(pin);
 
+  // Profil sélectionné dans le choix des profils, en attente de son code PIN.
+  const [pendingProfile, setPendingProfile] = useState(null);
+
   // État transitoire d'UI (remis à zéro à la déconnexion).
   const [openComments, setOpenComments] = useState(null);
   const [confirmData, setConfirmData] = useState(null); // { message, action }
@@ -46,6 +50,7 @@ export default function Home() {
       setConfirmData(null);
       setEditData(null);
       setOpenComments(null);
+      setPendingProfile(null);
     },
   });
 
@@ -87,9 +92,24 @@ export default function Home() {
     );
   }
 
+  // ---------- CODE DU PROFIL (création la 1re fois, sinon vérification) ----------
+  if (pendingProfile) {
+    return (
+      <ProfilePinGate
+        familyPin={pin}
+        member={pendingProfile}
+        onUnlock={(member) => {
+          chooseMe(member);
+          setPendingProfile(null);
+        }}
+        onCancel={() => setPendingProfile(null)}
+      />
+    );
+  }
+
   // ---------- QUI SOMMES-NOUS ? (choix du profil) ----------
   if (!me) {
-    return <ProfilePicker onChoose={chooseMe} />;
+    return <ProfilePicker onChoose={setPendingProfile} />;
   }
 
   // ---------- APPLI ----------

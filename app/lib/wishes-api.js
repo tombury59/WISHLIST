@@ -1,15 +1,6 @@
-// Couche d'accès HTTP côté client : toutes les requêtes vers /api passent par
-// ici. Chaque appel joint le code famille dans l'en-tête `x-family-pin` et
-// lève une erreur si la réponse n'est pas OK (le PIN sert aussi à valider la
-// connexion).
-
-async function request(path, pin, options = {}) {
-  const headers = { "x-family-pin": pin, ...(options.headers || {}) };
-  if (options.body != null) headers["Content-Type"] = "application/json";
-  const res = await fetch(path, { cache: "no-store", ...options, headers });
-  if (!res.ok) throw new Error("request-failed");
-  return res.json();
-}
+// Couche d'accès HTTP côté client aux souhaits, commentaires, réactions et
+// historique. Le code famille (`pin`) valide chaque appel (et la connexion).
+import { request } from "./http";
 
 // ---- Souhaits ----
 export function getWishes(pin) {

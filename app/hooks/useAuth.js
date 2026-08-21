@@ -71,18 +71,7 @@ export function useAuth({ pin, setPin, loadWishes, onLogout }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Clavier physique sur l'écran du code.
-  useEffect(() => {
-    if (authed) return;
-    const onKey = (e) => {
-      const h = handlersRef.current;
-      if (/^[0-9]$/.test(e.key)) h.pushDigit(e.key);
-      else if (e.key === "Backspace") h.backspace();
-      else if (e.key === "Enter") h.tryLogin(pinRef.current);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [authed]);
+  // (Le clavier physique de l'écran du code est géré par le composant PinPad.)
 
   // Synchronisation auto : on recharge régulièrement pour voir les ajouts
   // des autres, sans rafraîchir la page à la main.
