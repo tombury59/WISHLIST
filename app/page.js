@@ -15,6 +15,7 @@ import AppHeader from "./components/AppHeader";
 import MemberTabs from "./components/MemberTabs";
 import AddForm from "./components/AddForm";
 import ViewSwitch from "./components/ViewSwitch";
+import RefreshButton from "./components/RefreshButton";
 import WishCarousel from "./components/WishCarousel";
 import WishItem from "./components/WishItem";
 import CommentsPanel from "./components/CommentsPanel";
@@ -42,7 +43,6 @@ export default function Home() {
   const [editData, setEditData] = useState(null); // { member, wish }
 
   const auth = useAuth({
-    pin,
     setPin,
     loadWishes: wishesApi.loadWishes,
     onLogout: () => {
@@ -172,27 +172,31 @@ export default function Home() {
                 </p>
               )}
 
+              <div className="list-toolbar">
+                <RefreshButton
+                  onRefresh={() => wishesApi.loadWishes(pin).catch(() => {})}
+                />
+                {list.length > 0 && (
+                  <ViewSwitch view={view} onChange={changeView} />
+                )}
+              </div>
+
               {list.length === 0 ? (
                 <p className="empty">Aucun souhait pour l'instant.</p>
+              ) : view === "carousel" ? (
+                <WishCarousel list={list} highlights={highlights} itemProps={itemProps} />
               ) : (
-                <>
-                  <ViewSwitch view={view} onChange={changeView} />
-                  {view === "carousel" ? (
-                    <WishCarousel list={list} highlights={highlights} itemProps={itemProps} />
-                  ) : (
-                    <ul className="wish-list">
-                      {list.map((w) => (
-                        <WishItem
-                          key={w.id}
-                          wish={w}
-                          variant="list"
-                          highlighted={highlights.includes(w.id)}
-                          {...itemProps}
-                        />
-                      ))}
-                    </ul>
-                  )}
-                </>
+                <ul className="wish-list">
+                  {list.map((w) => (
+                    <WishItem
+                      key={w.id}
+                      wish={w}
+                      variant="list"
+                      highlighted={highlights.includes(w.id)}
+                      {...itemProps}
+                    />
+                  ))}
+                </ul>
               )}
             </section>
 

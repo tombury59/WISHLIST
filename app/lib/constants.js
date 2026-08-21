@@ -1,11 +1,10 @@
 // Réglages transverses de l'appli, regroupés en un seul endroit.
 
-// Déconnexion automatique après 15 min sans activité (coupe le
-// rafraîchissement et revient à l'écran du code).
+// Déconnexion automatique après 15 min sans activité (revient à l'écran du code).
 export const INACTIVITY_MS = 15 * 60 * 1000;
 
-// Fréquence du rafraîchissement auto des souhaits (voir les ajouts des autres).
-export const REFRESH_MS = 15000;
+// Délai minimal entre deux actualisations manuelles des souhaits.
+export const REFRESH_COOLDOWN_MS = 8000;
 
 // « Petit écran ? » — aligné sur le breakpoint CSS (820px).
 export const MOBILE_QUERY = "(max-width: 819px)";

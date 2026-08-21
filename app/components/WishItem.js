@@ -28,6 +28,11 @@ export default function WishItem({
   // Menu contextuel : `menu` = position { x, y } où l'afficher, ou null.
   const [menu, setMenu] = useState(null);
 
+  // Rebond de l'icône commentaire au clic (classe basculée, remise à zéro en
+  // fin d'animation pour pouvoir rejouer — pas de `key` qui la doublerait sous
+  // React StrictMode).
+  const [commentBump, setCommentBump] = useState(false);
+
   const comments = wish.comments || [];
   const reactions = wish.reactions || {};
 
@@ -77,12 +82,16 @@ export default function WishItem({
       <button
         type="button"
         className={"wish-comment-btn" + (open ? " is-open" : "")}
-        onClick={() => onToggleComments(wish.id)}
+        onClick={() => {
+          setCommentBump(true);
+          onToggleComments(wish.id);
+        }}
         aria-label={open ? "Cacher les commentaires" : "Afficher les commentaires"}
         title="Commentaires"
       >
         <svg
-          className="wish-comment-icon"
+          className={"wish-comment-icon" + (commentBump ? " is-bump" : "")}
+          onAnimationEnd={() => setCommentBump(false)}
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"

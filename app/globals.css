@@ -1096,15 +1096,145 @@ body {
 }
 
 /* ---------- SÉLECTEUR DE VUE (liste / carrousel) ---------- */
+/* Barre au-dessus des objets : actualisation (gauche) + vue (droite) */
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
 .view-switch {
   display: flex;
   gap: 2px;
   width: fit-content;
-  margin: 0 0 16px auto; /* aligné à droite */
   padding: 3px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 10px;
+}
+
+/* Bouton d'actualisation manuelle (cooldown 8s avec remplissage progressif) */
+.refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.refresh-btn:disabled {
+  cursor: default;
+}
+
+.refresh-btn:not(:disabled):hover {
+  background: var(--surface-3);
+}
+
+.refresh-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+}
+
+/* Bref pivot des flèches à chaque clic */
+.refresh-icon-wrap.is-spinning {
+  animation: refresh-spin 0.6s ease;
+}
+
+.refresh-icon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Base = gris foncé (couleur « vidée ») ; remplissage = clair, plein par défaut */
+.refresh-icon-base {
+  color: var(--faint);
+}
+
+.refresh-icon-fill {
+  color: var(--text);
+  clip-path: inset(0 0 0 0);
+}
+
+/* Au clic : la couleur claire remonte du bas vers le haut, tout en douceur */
+.refresh-icon-fill.is-refilling {
+  animation: refresh-refill var(--refill-ms, 8s) linear;
+}
+
+@keyframes refresh-refill {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Micro-animations des icônes (vue & commentaire) ---------- */
+.view-ico {
+  display: inline-flex;
+}
+
+.view-ico svg {
+  display: block;
+}
+
+/* Carrousel : rotation + pop à l'activation */
+.view-ico-carousel.is-bump svg {
+  animation: icon-spin-pop 0.5s ease;
+}
+
+/* Liste : les 4 carrés apparaissent en cascade */
+.view-ico-list.is-bump svg rect {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: icon-rect-pop 0.42s ease both;
+}
+.view-ico-list.is-bump svg rect:nth-child(1) { animation-delay: 0ms; }
+.view-ico-list.is-bump svg rect:nth-child(2) { animation-delay: 55ms; }
+.view-ico-list.is-bump svg rect:nth-child(3) { animation-delay: 110ms; }
+.view-ico-list.is-bump svg rect:nth-child(4) { animation-delay: 165ms; }
+
+/* Commentaire : rebond de la bulle au clic */
+.wish-comment-icon.is-bump {
+  transform-origin: center;
+  animation: comment-pop 0.45s ease;
+}
+
+@keyframes icon-spin-pop {
+  0% { transform: rotate(0) scale(0.85); }
+  60% { transform: rotate(60deg) scale(1.12); }
+  100% { transform: rotate(90deg) scale(1); }
+}
+
+@keyframes icon-rect-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes comment-pop {
+  0% { transform: scale(1) rotate(0); }
+  30% { transform: scale(1.25) rotate(-9deg); }
+  60% { transform: scale(0.95) rotate(5deg); }
+  100% { transform: scale(1) rotate(0); }
 }
 
 .view-opt {
