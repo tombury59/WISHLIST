@@ -29,8 +29,12 @@ export default function Home() {
   const [view, setView] = useState("list");
 
   // Quel souhait a ses commentaires ouverts (un seul à la fois). Sur desktop
-  // ils s'affichent dans le panneau latéral, sur mobile en dessous.
+  // ils s'affichent dans le panneau latéral, sur mobile en dessous (ou en
+  // modale en vue liste, voir plus bas).
   const [openComments, setOpenComments] = useState(null);
+
+  // Petit écran ? (aligné sur le breakpoint CSS 820px).
+  const [isMobile, setIsMobile] = useState(false);
   const [active, setActive] = useState(MEMBER_NAMES[0]);
   const [wishes, setWishes] = useState({});
   const [name, setName] = useState("");
@@ -48,6 +52,15 @@ export default function Home() {
   useEffect(() => {
     pinRef.current = pin;
   }, [pin]);
+
+  // Suivi de la taille d'écran pour choisir où afficher les commentaires.
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 819px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     // Profil mémorisé (identité de cet appareil).
@@ -459,9 +472,18 @@ export default function Home() {
   // Le souhait dont les commentaires sont ouverts (pour le panneau latéral).
   const commentWish = list.find((w) => w.id === openComments) || null;
 
+  // Sur petit écran EN VUE LISTE, les commentaires s'ouvrent dans une modale
+  // (plutôt qu'en bas de la liste, où ils passaient inaperçus s'il y a beaucoup
+  // d'objets). En carrousel et sur desktop : comportement inchangé.
+  const commentsInModal = isMobile && view === "list";
+
   return (
     <main className="app">
-      <div className={"app-main" + (commentWish ? " has-comments" : "")}>
+      <div
+        className={
+          "app-main" + (commentWish && !commentsInModal ? " has-comments" : "")
+        }
+      >
         <div className="app-col">
       <header className="app-header">
         <button
@@ -550,9 +572,10 @@ export default function Home() {
         )}
         </section>
 
-        {/* Toujours présent (vide quand fermé) pour que l'ouverture s'anime. */}
+        {/* Toujours présent (vide quand fermé) pour que l'ouverture s'anime.
+            Vide aussi quand les commentaires passent en modale. */}
         <aside className="comment-side">
-          {commentWish && (
+          {commentWish && !commentsInModal && (
             <CommentsPanel
               key={commentWish.id}
               wish={commentWish}
@@ -568,6 +591,27 @@ export default function Home() {
         </div>
         </div>
       </div>
+
+      {/* Petit écran + vue liste : commentaires dans une modale. */}
+      {commentWish && commentsInModal && (
+        <div className="overlay" onClick={closeComments}>
+          <div
+            className="comment-modal-wrap"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CommentsPanel
+              key={commentWish.id}
+              wish={commentWish}
+              member={active}
+              me={me}
+              variant="modal"
+              onAddComment={addComment}
+              onDeleteComment={requestDeleteComment}
+              onClose={closeComments}
+            />
+          </div>
+        </div>
+      )}
 
       {historyOpen && (
         <HistoryModal
@@ -1093,9 +1137,10 @@ function CommentsPanel({
     }
   }
 
+  const withChrome = variant === "side" || variant === "modal";
   return (
     <div className={"comments comments--" + variant}>
-      {variant === "side" && (
+      {withChrome && (
         <div className="comments-head">
           <span className="comments-title">{wish.name}</span>
           <button
@@ -1132,7 +1177,7 @@ function CommentsPanel({
             ))}
           </ul>
         ) : (
-          variant === "side" && (
+          withChrome && (
             <p className="comments-empty">Aucun commentaire pour l'instant.</p>
           )
         )}
