@@ -116,12 +116,21 @@ export default function Home() {
   if (!me) {
     return (
       <ProfilePicker
-        onChoose={setPendingProfile}
         online={online}
-        biometricAvailable={biometric.available}
-        onBiometric={async () => {
-          const member = await biometric.unlock(pin);
-          chooseMe(member);
+        enrolledMembers={biometric.enrolled}
+        onChoose={async (member) => {
+          // Profil enrôlé sur cet appareil -> tentative biométrique directe ;
+          // sinon (ou en cas d'échec/annulation) -> écran du code.
+          if (biometric.available && biometric.enrolled.includes(member)) {
+            try {
+              const m = await biometric.unlock(pin, member);
+              chooseMe(m);
+              return;
+            } catch {
+              /* annulé ou échec -> repli sur le code */
+            }
+          }
+          setPendingProfile(member);
         }}
       />
     );

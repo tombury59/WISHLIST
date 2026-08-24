@@ -6,37 +6,26 @@ import { avatarColor } from "../lib/format";
 import { hasUserPinHash } from "../lib/offline-store";
 
 // « Qui es-tu ? » — choix du profil, à la Netflix.
-// La biométrie (si disponible sur l'appareil) est proposée EN PRIORITÉ ; la
-// grille des profils sert de repli (« autre méthode »).
-export default function ProfilePicker({ onChoose, online = true, biometricAvailable, onBiometric }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+// Au clic sur un profil, le parent tente d'abord la biométrie (si ce profil est
+// enrôlé sur l'appareil) puis retombe sur le code. Ici on gère juste l'état
+// « occupé » du profil cliqué et le grisage hors ligne.
+export default function ProfilePicker({ onChoose, online = true, enrolledMembers = [] }) {
+  const [busyMember, setBusyMember] = useState(null);
 
-  // Hors ligne : seuls les profils déjà ouverts sur cet appareil (empreinte de
-  // code locale) sont déverrouillables. Calculé au montage (lecture localStorage).
-  const [offlineMembers, setOfflineMembers] = useState(null);
+  // Profils déverrouillables hors ligne : ceux qui ont une empreinte de code
+  // locale OU une clé biométrique enrôlée sur cet appareil.
+  const [pinMembers, setPinMembers] = useState(null);
   useEffect(() => {
-    setOfflineMembers(MEMBERS.filter((m) => hasUserPinHash(m)));
+    setPinMembers(MEMBERS.filter((m) => hasUserPinHash(m)));
   }, []);
 
-  async function unlock() {
-    if (busy) return;
-    setBusy(true);
-    setError("");
+  async function pick(m) {
+    if (busyMember) return;
+    setBusyMember(m);
     try {
-      await onBiometric();
-    } catch (e) {
-      if (e?.name === "NotAllowedError") {
-        setError("Déverrouillage annulé.");
-      } else if (e?.name === "NoLocalCredential") {
-        // Hors ligne mais l'id de clé n'est pas mémorisé (biométrie activée
-        // avant cette mise à jour) : il faut la réactiver une fois en ligne.
-        setError("Réactive la biométrie une fois en ligne, puis réessaie.");
-      } else {
-        setError("Biométrie indisponible. Choisis ton profil.");
-      }
+      await onChoose(m);
     } finally {
-      setBusy(false);
+      setBusyMember(null);
     }
   }
 
@@ -45,50 +34,30 @@ export default function ProfilePicker({ onChoose, online = true, biometricAvaila
       <div className="profiles">
         <h1 className="profiles-title">Qui es-tu ?</h1>
 
-        {biometricAvailable && (
-          <>
-            <button
-              type="button"
-              className="btn-primary bio-unlock"
-              onClick={unlock}
-              disabled={busy}
-            >
-              <span className="bio-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
-                  <path d="M12 11v3" />
-                  <path d="M8.5 4.5a8 8 0 0 1 7 0" />
-                  <path d="M5 7a11 11 0 0 1 14 0" />
-                  <path d="M7.5 10a6.5 6.5 0 0 1 9 0" />
-                  <path d="M9 16.5c.4 1 .5 2 .5 3" />
-                  <path d="M15 15.5c.3 1.5.3 3 0 4.5" />
-                  <path d="M12 15v.01" />
-                </svg>
-              </span>
-              {busy ? "Déverrouillage…" : "Déverrouiller avec la biométrie"}
-            </button>
-            {error && <p className="error bio-error">{error}</p>}
-            <p className="bio-sep">ou choisis ton profil</p>
-          </>
-        )}
-
         <div className="profile-grid">
           {MEMBERS.map((m) => {
-            // Verrouillé si hors ligne et pas d'empreinte locale pour ce profil.
-            const locked =
-              !online && offlineMembers !== null && !offlineMembers.includes(m);
+            const unlockable =
+              (pinMembers !== null && pinMembers.includes(m)) ||
+              enrolledMembers.includes(m);
+            const locked = !online && pinMembers !== null && !unlockable;
+            const busy = busyMember === m;
             return (
               <button
                 key={m}
                 type="button"
-                className={"profile-tile" + (locked ? " profile-tile--locked" : "")}
-                onClick={() => onChoose(m)}
-                disabled={locked}
+                className={
+                  "profile-tile" +
+                  (locked ? " profile-tile--locked" : "") +
+                  (busy ? " profile-tile--busy" : "")
+                }
+                onClick={() => pick(m)}
+                disabled={locked || Boolean(busyMember)}
                 title={locked ? "Indisponible hors ligne sur cet appareil" : undefined}
               >
                 <span className="profile-avatar" style={{ background: avatarColor(m) }}>
                   {m[0]}
                 </span>
-                <span className="profile-name">{m}</span>
+                <span className="profile-name">{busy ? "…" : m}</span>
               </button>
             );
           })}

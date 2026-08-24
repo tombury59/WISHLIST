@@ -131,14 +131,24 @@ export async function POST(request) {
     return NextResponse.json({ verified: true });
   }
 
-  // ---- Connexion : options (credential découvrable) ----
+  // ---- Connexion : options ----
+  // `member` (optionnel) : ne propose que les clés de CE profil (déclenché au
+  // clic sur un profil). Sans `member`, comportement découvrable (toutes clés).
   if (action === "login-options") {
+    const member = (body.member || "").trim();
+    let allowCredentials = [];
+    if (member) {
+      const all = (await kv.hgetall(CREDS_KEY)) || {};
+      allowCredentials = Object.entries(all)
+        .filter(([, c]) => c.member === member)
+        .map(([id, c]) => ({ id, transports: c.transports || undefined }));
+    }
     const options = await generateAuthenticationOptions({
       rpID,
       userVerification: "required",
-      allowCredentials: [], // le navigateur propose les clés de l'appareil
+      allowCredentials,
     });
-    const challengeId = await saveChallenge(options.challenge, {});
+    const challengeId = await saveChallenge(options.challenge, { member: member || null });
     return NextResponse.json({ options, challengeId });
   }
 
@@ -153,6 +163,11 @@ export async function POST(request) {
     const cred = credId ? all[credId] : null;
     if (!cred) {
       return NextResponse.json({ error: "Clé inconnue" }, { status: 400 });
+    }
+    // Sécurité : la clé doit bien appartenir au profil demandé.
+    const requested = (body.member || "").trim();
+    if (requested && cred.member !== requested) {
+      return NextResponse.json({ error: "Profil ne correspond pas" }, { status: 400 });
     }
     let verification;
     try {

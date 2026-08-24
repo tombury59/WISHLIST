@@ -47,14 +47,14 @@ export function useBiometric() {
     setCreds(next);
   }
 
-  // Renvoie le membre reconnu. En ligne : vérifié par le serveur. Hors ligne :
-  // prompt biométrique local, puis confiance locale (le PIN famille reste la
-  // barrière serveur).
-  function unlock(pin) {
+  // Déverrouille le profil `member`. En ligne : vérifié par le serveur. Hors
+  // ligne : prompt biométrique local puis confiance locale (le PIN famille
+  // reste la barrière serveur).
+  function unlock(pin, member) {
     if (typeof navigator !== "undefined" && !navigator.onLine) {
-      return loginBiometricLocal(readCreds());
+      return loginBiometricLocal(readCreds(), member);
     }
-    return loginBiometric(pin);
+    return loginBiometric(pin, member);
   }
 
   return { available, enrolled: creds.map((c) => c.member), enroll, unlock };

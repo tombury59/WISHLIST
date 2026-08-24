@@ -37,27 +37,30 @@ export async function registerBiometric(pin, member) {
   return response.id; // credentialID (base64url)
 }
 
-// Déverrouille par la biométrie EN LIGNE : le serveur fournit le défi et vérifie
-// la signature, puis renvoie le membre. Lève si annulé / aucune clé.
-export async function loginBiometric(pin) {
+// Déverrouille le profil `member` par la biométrie EN LIGNE : le serveur ne
+// propose que la clé de ce profil, fournit le défi et vérifie la signature.
+// Lève si annulé / aucune clé.
+export async function loginBiometric(pin, member) {
   const { options, challengeId } = await request("/api/webauthn", pin, {
     method: "POST",
-    body: JSON.stringify({ action: "login-options" }),
+    body: JSON.stringify({ action: "login-options", member }),
   });
   const response = await startAuthentication({ optionsJSON: options });
-  const { member } = await request("/api/webauthn", pin, {
+  const { member: verified } = await request("/api/webauthn", pin, {
     method: "POST",
-    body: JSON.stringify({ action: "login-verify", challengeId, response }),
+    body: JSON.stringify({ action: "login-verify", challengeId, response, member }),
   });
-  return member;
+  return verified;
 }
 
-// Déverrouille par la biométrie HORS LIGNE, sans serveur : on déclenche quand
-// même le capteur (le prompt est local), puis on fait confiance au résultat
-// localement (pas de vérification serveur — le PIN famille reste la vraie
-// barrière). `creds` = [{ id, member }] mémorisés à l'enrôlement.
-export async function loginBiometricLocal(creds) {
-  const usable = (creds || []).filter((c) => c && c.id);
+// Déverrouille le profil `member` par la biométrie HORS LIGNE, sans serveur :
+// on déclenche quand même le capteur (prompt local), puis on fait confiance au
+// résultat localement (le PIN famille reste la vraie barrière serveur).
+// `creds` = [{ id, member }] mémorisés à l'enrôlement.
+export async function loginBiometricLocal(creds, member) {
+  const usable = (creds || []).filter(
+    (c) => c && c.id && (!member || c.member === member)
+  );
   if (usable.length === 0) {
     const err = new Error("no-local-credential");
     err.name = "NoLocalCredential";

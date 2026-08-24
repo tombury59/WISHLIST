@@ -1196,6 +1196,16 @@ body {
   transform: none;
 }
 
+/* Profil en cours de déverrouillage (biométrie). */
+.profile-tile--busy .profile-avatar {
+  border-color: var(--text);
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .profile-name {
   color: var(--muted);
   font-size: 14px;
