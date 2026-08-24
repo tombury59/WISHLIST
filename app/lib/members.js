@@ -1,5 +1,5 @@
 // La famille. L'ordre ici = l'ordre affiché dans l'appli.
-export const MEMBERS = ["Lilou", "Sam", "Tom", "Théo", "Maman", "Papa"];
+export const MEMBERS = ["Lilou", "Sam", "Tom", "Théo", "Maman", "Papa", "Katell"];
 
 export const MEMBER_NAMES = MEMBERS;
 
@@ -11,4 +11,5 @@ export const MEMBER_COLORS = {
   Théo: "#f97316", // orange
   Maman: "#22c55e", // vert
   Papa: "#8b5cf6", // violet
+  Katell: "#3515c3", // bleu foncé
 };
