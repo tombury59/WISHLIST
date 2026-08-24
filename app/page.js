@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { useWishes } from "./hooks/useWishes";
 import { useProfile } from "./hooks/useProfile";
@@ -25,6 +25,11 @@ import HistoryModal from "./components/HistoryModal";
 import ConfirmModal from "./components/ConfirmModal";
 import EditModal from "./components/EditModal";
 import OfflineBanner from "./components/OfflineBanner";
+import AccountPage from "./components/AccountPage";
+import * as profileApi from "./lib/profile-api";
+import { updateUserPin } from "./lib/pins-api";
+import { setColorOverrides } from "./lib/format";
+import * as offline from "./lib/offline-store";
 
 export default function Home() {
   // Le PIN est la source unique de vérité, partagée entre l'auth et les données.
@@ -41,6 +46,10 @@ export default function Home() {
   // Profil sélectionné dans le choix des profils, en attente de son code PIN.
   const [pendingProfile, setPendingProfile] = useState(null);
 
+  // Page « Mon compte » (ouverte depuis l'icône de profil) + couleurs partagées.
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [colors, setColors] = useState({});
+
   // État transitoire d'UI (remis à zéro à la déconnexion).
   const [openComments, setOpenComments] = useState(null);
   const [confirmData, setConfirmData] = useState(null); // { message, action }
@@ -56,8 +65,23 @@ export default function Home() {
       setEditData(null);
       setOpenComments(null);
       setPendingProfile(null);
+      setAccountOpen(false);
     },
   });
+
+  // Charge les couleurs partagées une fois connecté (et les rend actives via
+  // avatarColor dans toute l'appli).
+  useEffect(() => {
+    if (!auth.authed) return;
+    profileApi
+      .getColors(pin)
+      .then((d) => {
+        setColorOverrides(d.colors || {});
+        setColors(d.colors || {});
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.authed]);
 
   const toggleComments = (id) =>
     setOpenComments((cur) => (cur === id ? null : id));
@@ -175,11 +199,8 @@ export default function Home() {
 
           <AppHeader
             me={me}
-            onChangeProfile={() => setMe(null)}
+            onOpenAccount={() => setAccountOpen(true)}
             onOpenHistory={historyApi.openHistory}
-            canEnableBiometric={online && biometric.available}
-            biometricEnrolled={biometric.enrolled.includes(me)}
-            onEnableBiometric={() => biometric.enroll(pin, me)}
           />
 
           <MemberTabs
@@ -301,6 +322,33 @@ export default function Home() {
             wishesApi.editWish(editData.member, editData.wish.id, name, link);
             setEditData(null);
           }}
+        />
+      )}
+
+      {accountOpen && (
+        <AccountPage
+          me={me}
+          online={online}
+          biometricAvailable={biometric.available}
+          biometricEnrolled={biometric.enrolled.includes(me)}
+          onPickColor={async (c) => {
+            await profileApi.setColor(pin, { member: me, color: c });
+            const next = { ...colors, [me]: c };
+            setColorOverrides(next);
+            setColors(next);
+          }}
+          onChangePin={async (code) => {
+            await updateUserPin(pin, { member: me, code });
+            await offline.setUserPinHash(me, code);
+          }}
+          onEnrollBiometric={() => biometric.enroll(pin, me)}
+          onClearCache={() => wishesApi.clearOfflineData()}
+          onChangeProfile={() => {
+            setAccountOpen(false);
+            setMe(null);
+          }}
+          onLogout={() => auth.logout()}
+          onClose={() => setAccountOpen(false)}
         />
       )}
     </main>

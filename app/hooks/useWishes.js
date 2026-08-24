@@ -268,9 +268,21 @@ export function useWishes(pin) {
     await refreshPending();
   }
 
+  // Vide le cache hors ligne (données mises en cache + file d'attente) puis,
+  // si en ligne, recharge tout depuis le serveur.
+  async function clearOfflineData() {
+    await outbox.clear();
+    await offline.clearWishesCache();
+    setPendingCount(0);
+    if (typeof navigator === "undefined" || navigator.onLine) {
+      await loadWishes(pinRef.current).catch(() => {});
+    }
+  }
+
   return {
     wishes,
     pendingCount,
+    clearOfflineData,
     loadWishes,
     addWish,
     editWish,

@@ -46,6 +46,10 @@ export async function count() {
   return (await readAll()).length;
 }
 
+export async function clear() {
+  await writeAll([]);
+}
+
 // Clés de coalescence.
 export const reactionKey = (member, wishId, reaction, author) =>
   `reaction:${member}:${wishId}:${reaction}:${author}`;

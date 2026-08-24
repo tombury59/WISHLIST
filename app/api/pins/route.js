@@ -42,6 +42,13 @@ export async function POST(request) {
     return NextResponse.json({ ok: true });
   }
 
+  // Changement de code depuis « Mon compte » (l'utilisateur est déjà connecté à
+  // son profil) : on écrase sans exiger l'ancien code.
+  if (action === "update") {
+    await setPin(member, pin);
+    return NextResponse.json({ ok: true });
+  }
+
   if (action === "verify") {
     const ok = await verifyPin(member, pin);
     return NextResponse.json({ ok });

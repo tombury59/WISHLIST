@@ -23,3 +23,11 @@ export function verifyUserPin(pin, { member, code }) {
     body: JSON.stringify({ member, pin: code, action: "verify" }),
   });
 }
+
+// Change le code d'un profil (depuis « Mon compte », déjà connecté) — écrase.
+export function updateUserPin(pin, { member, code }) {
+  return request("/api/pins", pin, {
+    method: "POST",
+    body: JSON.stringify({ member, pin: code, action: "update" }),
+  });
+}

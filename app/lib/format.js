@@ -20,7 +20,28 @@ export function normalizeUrl(url) {
   return "https://" + url;
 }
 
-// Couleur d'avatar attribuée à chaque membre (repli gris si inconnu).
-export function avatarColor(name) {
-  return MEMBER_COLORS[name] || "#3f3f46";
+// Surcharges de couleur choisies par les membres (partagées, chargées au
+// démarrage depuis /api/profile). Priment sur les couleurs par défaut.
+let colorOverrides = {};
+export function setColorOverrides(map) {
+  colorOverrides = map && typeof map === "object" ? map : {};
 }
+
+// Couleur d'avatar d'un membre : surcharge choisie, sinon défaut, sinon gris.
+export function avatarColor(name) {
+  return colorOverrides[name] || MEMBER_COLORS[name] || "#3f3f46";
+}
+
+// Palette proposée dans « Mon compte » pour choisir sa couleur.
+export const COLOR_PALETTE = [
+  "#e5484d", // rouge
+  "#f97316", // orange
+  "#f5c518", // jaune
+  "#22c55e", // vert
+  "#14b8a6", // turquoise
+  "#3b82f6", // bleu
+  "#3515c3", // bleu foncé
+  "#8b5cf6", // violet
+  "#ec4899", // rose
+  "#78716c", // taupe
+];

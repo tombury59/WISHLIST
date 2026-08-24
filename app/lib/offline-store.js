@@ -1,7 +1,7 @@
 // Cache local (IndexedDB) des souhaits, pour l'affichage hors ligne et un
 // démarrage instantané. Plus une empreinte du PIN famille pour autoriser une
 // reprise de session hors ligne sans jamais stocker le code en clair.
-import { get, set } from "idb-keyval";
+import { get, set, del } from "idb-keyval";
 
 const WISHES_KEY = "wishes-cache";
 const PINHASH_KEY = "family-pinhash"; // localStorage
@@ -19,6 +19,16 @@ export async function getCachedWishes() {
     return (await get(WISHES_KEY)) || null;
   } catch {
     return null;
+  }
+}
+
+// Efface les données mises en cache pour l'affichage hors ligne (pas les
+// empreintes de code ni les clés biométriques).
+export async function clearWishesCache() {
+  try {
+    await del(WISHES_KEY);
+  } catch {
+    /* ignore */
   }
 }
 
