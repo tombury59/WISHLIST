@@ -21,6 +21,7 @@ export default function WishItem({
   openCommentsId,
   onToggleComments,
   onOpenComments,
+  online = true,
   // Glisser-déposer (fournis seulement en vue liste sur SA propre liste).
   dragRef,
   dragStyle,
@@ -180,6 +181,7 @@ export default function WishItem({
           member={member}
           me={me}
           canEdit={canEdit}
+          online={online}
           onClose={() => setMenu(null)}
           onOpenComments={onOpenComments}
           onRequestEdit={onRequestEdit}

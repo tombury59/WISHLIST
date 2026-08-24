@@ -8,6 +8,7 @@ import { useHistory } from "./hooks/useHistory";
 import { useView } from "./hooks/useView";
 import { useIsMobile } from "./hooks/useIsMobile";
 import { useBiometric } from "./hooks/useBiometric";
+import { useOnline } from "./hooks/useOnline";
 import Gate from "./components/Gate";
 import ProfilePicker from "./components/ProfilePicker";
 import ProfilePinGate from "./components/ProfilePinGate";
@@ -23,6 +24,7 @@ import CommentsPanel from "./components/CommentsPanel";
 import HistoryModal from "./components/HistoryModal";
 import ConfirmModal from "./components/ConfirmModal";
 import EditModal from "./components/EditModal";
+import OfflineBanner from "./components/OfflineBanner";
 
 export default function Home() {
   // Le PIN est la source unique de vérité, partagée entre l'auth et les données.
@@ -34,6 +36,7 @@ export default function Home() {
   const isMobile = useIsMobile();
   const historyApi = useHistory(pin);
   const biometric = useBiometric();
+  const online = useOnline();
 
   // Profil sélectionné dans le choix des profils, en attente de son code PIN.
   const [pendingProfile, setPendingProfile] = useState(null);
@@ -139,6 +142,7 @@ export default function Home() {
     openCommentsId: openComments,
     onToggleComments: toggleComments,
     onOpenComments: openCommentsFor,
+    online, // hors ligne : ajout de commentaire / édition / suppression masqués
   };
 
   // Le souhait dont les commentaires sont ouverts (pour le panneau latéral).
@@ -157,11 +161,15 @@ export default function Home() {
         }
       >
         <div className="app-col">
+          {!online && <OfflineBanner pending={wishesApi.pendingCount} />}
+
           <AppHeader
             me={me}
             onChangeProfile={() => setMe(null)}
             onOpenHistory={historyApi.openHistory}
-            canEnableBiometric={biometric.available && !biometric.enrolled.includes(me)}
+            canEnableBiometric={
+              online && biometric.available && !biometric.enrolled.includes(me)
+            }
             onEnableBiometric={() => biometric.enroll(pin, me)}
           />
 
@@ -177,7 +185,13 @@ export default function Home() {
           <div className="panel-row">
             <section className="panel">
               {isMine ? (
-                <AddForm onAdd={(name, link) => wishesApi.addWish(active, name, link)} />
+                online ? (
+                  <AddForm onAdd={(name, link) => wishesApi.addWish(active, name, link)} />
+                ) : (
+                  <p className="view-note">
+                    Ajout indisponible hors ligne. Tu peux réordonner et réagir.
+                  </p>
+                )
               ) : (
                 <p className="view-note">
                   Tu regardes la liste de {active}. Tu ne peux ajouter que sur la tienne.
@@ -221,6 +235,7 @@ export default function Home() {
                   member={active}
                   me={me}
                   variant="side"
+                  online={online}
                   onAddComment={wishesApi.addComment}
                   onDeleteComment={requestDeleteComment}
                   onClose={closeComments}
@@ -241,6 +256,7 @@ export default function Home() {
               member={active}
               me={me}
               variant="modal"
+              online={online}
               onAddComment={wishesApi.addComment}
               onDeleteComment={requestDeleteComment}
               onClose={closeComments}

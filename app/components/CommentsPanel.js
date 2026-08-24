@@ -9,6 +9,7 @@ export default function CommentsPanel({
   member,
   me,
   variant,
+  online = true,
   onAddComment,
   onDeleteComment,
   onClose,
@@ -59,7 +60,7 @@ export default function CommentsPanel({
                   {c.author && <span className="comment-author">{c.author}</span>}
                   <span className="comment-text">{c.text}</span>
                 </div>
-                {c.author === me && (
+                {c.author === me && online && (
                   <button
                     className="comment-del"
                     onClick={() => onDeleteComment(member, wish.id, c)}
@@ -79,18 +80,22 @@ export default function CommentsPanel({
         )}
       </div>
 
-      <form className="comment-form" onSubmit={submit}>
-        <span className="comment-as">{me} :</span>
-        <input
-          className="field comment-input"
-          placeholder="Ajouter un commentaire…"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <button className="btn-primary btn-sm" disabled={sending || !text.trim()}>
-          {sending ? "…" : "Envoyer"}
-        </button>
-      </form>
+      {online ? (
+        <form className="comment-form" onSubmit={submit}>
+          <span className="comment-as">{me} :</span>
+          <input
+            className="field comment-input"
+            placeholder="Ajouter un commentaire…"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+          <button className="btn-primary btn-sm" disabled={sending || !text.trim()}>
+            {sending ? "…" : "Envoyer"}
+          </button>
+        </form>
+      ) : (
+        <p className="comments-offline">Commentaires en lecture seule hors ligne.</p>
+      )}
     </div>
   );
 }

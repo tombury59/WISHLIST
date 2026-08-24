@@ -1,8 +1,5 @@
 // Réglages transverses de l'appli, regroupés en un seul endroit.
 
-// Déconnexion automatique après 15 min sans activité (revient à l'écran du code).
-export const INACTIVITY_MS = 15 * 60 * 1000;
-
 // Délai minimal entre deux actualisations manuelles des souhaits.
 export const REFRESH_COOLDOWN_MS = 8000;
 

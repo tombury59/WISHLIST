@@ -15,6 +15,7 @@ export default function WishContextMenu({
   member,
   me,
   canEdit,
+  online = true,
   onClose,
   onOpenComments,
   onRequestEdit,
@@ -79,19 +80,22 @@ export default function WishContextMenu({
           </button>
         )}
 
-        <div className="ctx-sep" />
+        {/* Catégorie : actions (indisponibles hors ligne) */}
+        {online && (
+          <>
+            <div className="ctx-sep" />
+            <button
+              type="button"
+              className="ctx-item"
+              onClick={() => run(() => onOpenComments(wish.id))}
+            >
+              Ajouter un commentaire
+            </button>
+          </>
+        )}
 
-        {/* Catégorie : actions */}
-        <button
-          type="button"
-          className="ctx-item"
-          onClick={() => run(() => onOpenComments(wish.id))}
-        >
-          Ajouter un commentaire
-        </button>
-
-        {/* Catégorie : modifier / supprimer (sa propre liste) */}
-        {canEdit && (
+        {/* Catégorie : modifier / supprimer (sa propre liste, en ligne) */}
+        {canEdit && online && (
           <>
             <div className="ctx-sep" />
             <button

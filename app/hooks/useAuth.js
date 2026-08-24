@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { INACTIVITY_MS, STORAGE } from "../lib/constants";
+import { STORAGE } from "../lib/constants";
 
 // Écran du code (PIN) et cycle de session : connexion, restauration de la
 // session et déconnexion sur inactivité.
@@ -69,25 +69,9 @@ export function useAuth({ setPin, loadWishes, onLogout }) {
   }, []);
 
   // (Le clavier physique de l'écran du code est géré par le composant PinPad.)
-  // (L'actualisation des souhaits est désormais MANUELLE, via le bouton
-  //  d'actualisation à côté du sélecteur de vue — plus de synchro périodique.)
-
-  // Minuteur d'inactivité : chaque interaction le remet à zéro.
-  useEffect(() => {
-    if (!authed) return;
-    let timer;
-    const reset = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => handlersRef.current.logout(), INACTIVITY_MS);
-    };
-    const events = ["mousedown", "keydown", "touchstart", "scroll", "click"];
-    events.forEach((e) => window.addEventListener(e, reset, { passive: true }));
-    reset();
-    return () => {
-      clearTimeout(timer);
-      events.forEach((e) => window.removeEventListener(e, reset));
-    };
-  }, [authed]);
+  // (L'actualisation des souhaits est MANUELLE, via le bouton d'actualisation —
+  //  plus de synchro périodique, donc plus de déconnexion auto sur inactivité :
+  //  elle ne servait qu'à limiter le spam de l'ancienne synchro.)
 
   return { authed, loading, error, pushDigit, backspace, tryLogin, logout };
 }

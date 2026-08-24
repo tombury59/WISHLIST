@@ -55,10 +55,12 @@ export function removeComment(pin, { member, wishId, commentId }) {
 }
 
 // ---- Réactions ----
-export function setReaction(pin, { member, wishId, reaction, author }) {
+// `on` (optionnel) : état voulu explicite (true = poser, false = retirer).
+// Fourni lors d'un rejeu depuis l'outbox pour rester idempotent ; absent = bascule.
+export function setReaction(pin, { member, wishId, reaction, author, on }) {
   return request("/api/wishes", pin, {
     method: "PATCH",
-    body: JSON.stringify({ member, wishId, reaction, author }),
+    body: JSON.stringify({ member, wishId, reaction, author, on }),
   });
 }
 

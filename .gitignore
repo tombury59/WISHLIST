@@ -4,3 +4,8 @@ node_modules
 .env.local
 .vercel
 .DS_Store
+
+# Service worker généré par Serwist (au build)
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js

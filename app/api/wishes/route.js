@@ -138,9 +138,20 @@ export async function PATCH(request) {
     }
     const reactions = wish.reactions || {};
     const who = reactions[reaction] || [];
-    reactions[reaction] = who.includes(author)
-      ? who.filter((n) => n !== author) // déjà présent -> on retire
-      : [...who, author]; // absent -> on ajoute
+    // `on` (booléen) = état voulu explicite : indispensable pour rejouer une
+    // réaction faite hors ligne sans risque d'inversion. Sans `on`, on bascule
+    // (comportement d'origine).
+    if (typeof body.on === "boolean") {
+      reactions[reaction] = body.on
+        ? who.includes(author)
+          ? who
+          : [...who, author]
+        : who.filter((n) => n !== author);
+    } else {
+      reactions[reaction] = who.includes(author)
+        ? who.filter((n) => n !== author)
+        : [...who, author];
+    }
     if (reactions[reaction].length === 0) delete reactions[reaction];
     wish.reactions = reactions;
     await kv.hset(keyFor(member), { [wishId]: wish });
