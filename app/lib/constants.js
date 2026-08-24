@@ -19,4 +19,5 @@ export const STORAGE = {
   pin: "family-pin", // sessionStorage : code de la session en cours
   me: "family-me", // localStorage : profil choisi sur cet appareil
   view: "family-view", // localStorage : mode d'affichage (list / carousel)
+  biometric: "family-biometric", // localStorage : profils enrôlés (biométrie) sur cet appareil
 };

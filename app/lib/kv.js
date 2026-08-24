@@ -28,8 +28,12 @@ function createMemoryKv() {
       return scalars.has(key) ? clone(scalars.get(key)) : null;
     },
     async set(key, value) {
+      // Le 3e argument éventuel ({ ex }) est ignoré en mémoire (pas de TTL).
       scalars.set(key, clone(value));
       return "OK";
+    },
+    async del(key) {
+      return scalars.delete(key) || hashes.delete(key) || lists.delete(key) ? 1 : 0;
     },
     async hgetall(key) {
       const h = hashes.get(key);

@@ -7,6 +7,7 @@ import { useProfile } from "./hooks/useProfile";
 import { useHistory } from "./hooks/useHistory";
 import { useView } from "./hooks/useView";
 import { useIsMobile } from "./hooks/useIsMobile";
+import { useBiometric } from "./hooks/useBiometric";
 import Gate from "./components/Gate";
 import ProfilePicker from "./components/ProfilePicker";
 import ProfilePinGate from "./components/ProfilePinGate";
@@ -32,6 +33,7 @@ export default function Home() {
   const { view, changeView } = useView();
   const isMobile = useIsMobile();
   const historyApi = useHistory(pin);
+  const biometric = useBiometric();
 
   // Profil sélectionné dans le choix des profils, en attente de son code PIN.
   const [pendingProfile, setPendingProfile] = useState(null);
@@ -109,7 +111,16 @@ export default function Home() {
 
   // ---------- QUI SOMMES-NOUS ? (choix du profil) ----------
   if (!me) {
-    return <ProfilePicker onChoose={setPendingProfile} />;
+    return (
+      <ProfilePicker
+        onChoose={setPendingProfile}
+        biometricAvailable={biometric.available}
+        onBiometric={async () => {
+          const member = await biometric.unlock(pin);
+          chooseMe(member);
+        }}
+      />
+    );
   }
 
   // ---------- APPLI ----------
@@ -150,6 +161,8 @@ export default function Home() {
             me={me}
             onChangeProfile={() => setMe(null)}
             onOpenHistory={historyApi.openHistory}
+            canEnableBiometric={biometric.available && !biometric.enrolled.includes(me)}
+            onEnableBiometric={() => biometric.enroll(pin, me)}
           />
 
           <MemberTabs
