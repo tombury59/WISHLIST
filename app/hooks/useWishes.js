@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as api from "../lib/wishes-api";
+import { REORDER_BATCH_MS } from "../lib/constants";
 
 // Données des souhaits + toutes les mutations. Les modifications sont
 // appliquées immédiatement à l'écran (optimiste) ; la synchro périodique
@@ -12,8 +13,71 @@ export function useWishes(pin) {
   const pinRef = useRef(pin);
   pinRef.current = pin;
 
-  // Charge tout (sert aussi à valider le code à la connexion).
+  // --- Batch du réordonnancement ---
+  // `pendingOrder` : { membre -> tableau d'IDs final voulu }, en attente d'envoi.
+  // `flushTimer`   : minuteur du regroupement (démarré au 1er déplacement).
+  const pendingOrderRef = useRef({});
+  const flushTimerRef = useRef(null);
+
+  // Envoie tout de suite l'ordre en attente (1 appel par membre concerné) et
+  // vide la file. Renvoie une promesse pour pouvoir attendre avant un rechargement.
+  function flushReorder() {
+    if (flushTimerRef.current) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
+    const pending = pendingOrderRef.current;
+    pendingOrderRef.current = {};
+    const members = Object.keys(pending);
+    if (members.length === 0) return Promise.resolve();
+    return Promise.all(
+      members.map((member) =>
+        api.reorderWishes(pinRef.current, { member, ids: pending[member] }).catch(() => {})
+      )
+    );
+  }
+
+  // Applique un nouvel ordre à l'écran immédiatement, puis programme l'envoi
+  // groupé. Appelé à chaque « drop » ; on ne stocke que l'état FINAL, donc
+  // 10 déplacements = 1 seul appel.
+  function reorderWishes(member, ids) {
+    setWishes((prev) => {
+      const cur = prev[member] || [];
+      const byId = new Map(cur.map((w) => [w.id, w]));
+      const next = ids.map((id) => byId.get(id)).filter(Boolean);
+      // Sécurité : ré-ajoute en fin tout souhait absent de `ids`.
+      for (const w of cur) if (!ids.includes(w.id)) next.push(w);
+      return { ...prev, [member]: next };
+    });
+    pendingOrderRef.current[member] = ids;
+    if (!flushTimerRef.current) {
+      flushTimerRef.current = setTimeout(() => {
+        flushTimerRef.current = null;
+        flushReorder();
+      }, REORDER_BATCH_MS);
+    }
+  }
+
+  // Vide la file quand l'app se ferme ou passe en arrière-plan (mobile),
+  // sinon un rangement fait dans les 10 s serait perdu. `keepalive` (côté API)
+  // laisse l'envoi aboutir même pendant la fermeture.
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === "hidden") flushReorder();
+    };
+    window.addEventListener("pagehide", flushReorder);
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      window.removeEventListener("pagehide", flushReorder);
+      document.removeEventListener("visibilitychange", onHide);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Charge tout (sert aussi à valider le code à la connexion). On envoie d'abord
+  // l'ordre en attente pour ne pas récupérer une liste « pré-rangement ».
   async function loadWishes(code) {
+    await flushReorder();
     const data = await api.getWishes(code);
     setWishes(data.wishes || {});
   }
@@ -105,5 +169,7 @@ export function useWishes(pin) {
     addComment,
     deleteComment,
     toggleReaction,
+    reorderWishes,
+    flushReorder,
   };
 }

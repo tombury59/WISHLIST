@@ -358,6 +358,7 @@ body {
   padding: 0;
   display: flex;
   flex-direction: column;
+  gap:5px
 }
 
 .wish {
@@ -366,12 +367,63 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
-/* Mise en évidence LOCALE (par appareil) : léger surlignage, sans déplacer. */
-.wish-highlight {
-  background: rgba(245, 197, 24, 0.06);
-  box-shadow: inset 3px 0 0 0 #f5c518;
+/* Podium : les 3 premiers de la liste, teinte légère (or / argent / bronze)
+   + fin liseré à gauche pour marquer la priorité sans surcharger. */
+.wish-rank {
   border-radius: 8px;
   padding-left: 10px;
+}
+.wish-rank-1 {
+  background: rgba(245, 197, 24, 0.1); /* or */
+  box-shadow: inset 3px 0 0 0 #f5c518;
+}
+.wish-rank-2 {
+  background: rgba(180, 190, 200, 0.1); /* argent */
+  box-shadow: inset 3px 0 0 0 #b4bec8;
+}
+.wish-rank-3 {
+  background: rgba(205, 127, 50, 0.1); /* bronze */
+  box-shadow: inset 3px 0 0 0 #cd7f32;
+}
+
+/* Podium en CARROUSEL : petit rond numéroté (or/argent/bronze) en haut à
+   droite de l'image de la carte. */
+.wish-card {
+  position: relative;
+}
+.wish-rank-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #0a0a0b;
+  /* Fin anneau clair + ombre douce + petit reflet interne en haut. */
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.5);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+/* Dégradé métallique léger pour chaque médaille. */
+.wish-rank-badge-1 {
+  background: linear-gradient(145deg, #ffe27a 0%, #f5c518 55%, #d9a400 100%); /* or */
+}
+.wish-rank-badge-2 {
+  background: linear-gradient(145deg, #f3f6fa 0%, #d3dae2 55%, #aab4c0 100%); /* argent */
+}
+.wish-rank-badge-3 {
+  background: linear-gradient(145deg, #e6a465 0%, #cd7f32 55%, #a85f1c 100%); /* bronze */
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 /* Formulaire d'édition en ligne d'un souhait */
@@ -396,6 +448,43 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
+}
+
+/* ---------- GLISSER-DÉPOSER (réordonner sa propre liste) ---------- */
+/* Sur les lignes déplaçables : on coupe la sélection de texte, la loupe et le
+   menu copier/coller du tactile (iOS/Android), et on garde le scroll fluide
+   tant que l'appui long n'a pas « attrapé » la ligne. */
+.wish-list--sortable .wish {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Poignée « déplaçable » (repère visuel, à gauche de la ligne). */
+.wish-drag-handle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted, #8a8a8a);
+  cursor: grab;
+  user-select: none;
+  opacity: 0.5;
+  touch-action: none;
+}
+.wish-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* La ligne en cours de déplacement : soulevée au-dessus des autres. */
+.wish.wish-dragging {
+  position: relative;
+  z-index: 5;
+  background: var(--surface-3);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  opacity: 0.97;
+  cursor: grabbing;
 }
 
 /* ---------- RÉACTIONS ---------- */

@@ -11,6 +11,26 @@ function keyFor(member) {
   return `wishes:${member}`;
 }
 
+// Ordre d'affichage choisi à la main (glisser-déposer). On stocke, par membre,
+// un simple tableau d'IDs. Réordonner = réécrire cette seule clé (1 écriture),
+// quel que soit le nombre de déplacements.
+function orderKeyFor(member) {
+  return `order:${member}`;
+}
+
+// Trie `list` selon `order` (tableau d'IDs). Les souhaits absents de `order`
+// (nouveaux, jamais rangés) passent en fin, du plus ancien au plus récent.
+function sortByOrder(list, order) {
+  const rank = new Map((order || []).map((id, i) => [id, i]));
+  const BIG = Number.MAX_SAFE_INTEGER;
+  return [...list].sort((a, b) => {
+    const ra = rank.has(a.id) ? rank.get(a.id) : BIG;
+    const rb = rank.has(b.id) ? rank.get(b.id) : BIG;
+    if (ra !== rb) return ra - rb;
+    return a.createdAt - b.createdAt; // départage les non-rangés
+  });
+}
+
 // GET /api/wishes  -> tous les souhaits de toute la famille
 export async function GET(request) {
   if (!checkPin(request)) return unauthorized();
@@ -18,11 +38,15 @@ export async function GET(request) {
   const result = {};
   for (const member of MEMBER_NAMES) {
     const items = await kv.hgetall(keyFor(member));
-    result[member] = items
-      ? Object.values(items)
-          .map((w) => ({ ...w, comments: w.comments || [], reactions: w.reactions || {} }))
-          .sort((a, b) => a.createdAt - b.createdAt)
+    const list = items
+      ? Object.values(items).map((w) => ({
+          ...w,
+          comments: w.comments || [],
+          reactions: w.reactions || {},
+        }))
       : [];
+    const order = (await kv.get(orderKeyFor(member))) || [];
+    result[member] = sortByOrder(list, order);
   }
   return NextResponse.json({ wishes: result });
 }
@@ -66,6 +90,21 @@ export async function PATCH(request) {
   const wishId = (body.wishId || "").trim();
   const author = (body.author || "").trim();
   const reaction = (body.reaction || "").trim();
+
+  // ---- Réordonnancement (glisser-déposer) ----
+  // { op: "reorder", member, ids: [...] } -> réécrit l'ordre du membre.
+  // Une seule écriture, pas d'entrée d'historique. On ne garde que les IDs qui
+  // existent réellement (ignore le bruit / les souhaits supprimés entre-temps).
+  if (body.op === "reorder") {
+    if (!MEMBER_NAMES.includes(member)) {
+      return NextResponse.json({ error: "Membre inconnu" }, { status: 400 });
+    }
+    const ids = Array.isArray(body.ids) ? body.ids.filter((x) => typeof x === "string") : [];
+    const items = (await kv.hgetall(keyFor(member))) || {};
+    const clean = ids.filter((id) => items[id]);
+    await kv.set(orderKeyFor(member), clean);
+    return NextResponse.json({ ok: true, ids: clean });
+  }
 
   if (!MEMBER_NAMES.includes(member) || !wishId) {
     return NextResponse.json({ error: "Requête invalide" }, { status: 400 });

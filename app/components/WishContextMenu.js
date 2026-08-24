@@ -14,11 +14,9 @@ export default function WishContextMenu({
   wish,
   member,
   me,
-  highlighted,
   canEdit,
   onClose,
   onOpenComments,
-  onToggleHighlight,
   onRequestEdit,
   onDelete,
   onToggleReaction,
@@ -90,13 +88,6 @@ export default function WishContextMenu({
           onClick={() => run(() => onOpenComments(wish.id))}
         >
           Ajouter un commentaire
-        </button>
-        <button
-          type="button"
-          className="ctx-item"
-          onClick={() => run(() => onToggleHighlight(wish.id))}
-        >
-          {highlighted ? "Retirer la mise en évidence" : "Mettre en évidence"}
         </button>
 
         {/* Catégorie : modifier / supprimer (sa propre liste) */}

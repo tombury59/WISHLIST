@@ -5,7 +5,6 @@ import { useAuth } from "./hooks/useAuth";
 import { useWishes } from "./hooks/useWishes";
 import { useProfile } from "./hooks/useProfile";
 import { useHistory } from "./hooks/useHistory";
-import { useHighlights } from "./hooks/useHighlights";
 import { useView } from "./hooks/useView";
 import { useIsMobile } from "./hooks/useIsMobile";
 import Gate from "./components/Gate";
@@ -18,7 +17,7 @@ import ViewSwitch from "./components/ViewSwitch";
 import RefreshButton from "./components/RefreshButton";
 import ViewTransition from "./components/ViewTransition";
 import WishCarousel from "./components/WishCarousel";
-import WishItem from "./components/WishItem";
+import SortableWishList from "./components/SortableWishList";
 import CommentsPanel from "./components/CommentsPanel";
 import HistoryModal from "./components/HistoryModal";
 import ConfirmModal from "./components/ConfirmModal";
@@ -30,7 +29,6 @@ export default function Home() {
 
   const wishesApi = useWishes(pin);
   const { me, setMe, active, setActive, chooseMe } = useProfile();
-  const { highlights, toggleHighlight } = useHighlights();
   const { view, changeView } = useView();
   const isMobile = useIsMobile();
   const historyApi = useHistory(pin);
@@ -47,6 +45,7 @@ export default function Home() {
     setPin,
     loadWishes: wishesApi.loadWishes,
     onLogout: () => {
+      wishesApi.flushReorder();
       historyApi.close();
       setConfirmData(null);
       setEditData(null);
@@ -124,7 +123,6 @@ export default function Home() {
     canEdit: isMine,
     onDelete: requestDeleteWish,
     onRequestEdit: requestEditWish,
-    onToggleHighlight: toggleHighlight,
     onToggleReaction: (member, wishId, reaction) =>
       wishesApi.toggleReaction(member, wishId, reaction, me),
     openCommentsId: openComments,
@@ -187,19 +185,14 @@ export default function Home() {
               ) : (
                 <ViewTransition trigger={view}>
                   {view === "carousel" ? (
-                    <WishCarousel list={list} highlights={highlights} itemProps={itemProps} />
+                    <WishCarousel list={list} itemProps={itemProps} />
                   ) : (
-                    <ul className="wish-list">
-                      {list.map((w) => (
-                        <WishItem
-                          key={w.id}
-                          wish={w}
-                          variant="list"
-                          highlighted={highlights.includes(w.id)}
-                          {...itemProps}
-                        />
-                      ))}
-                    </ul>
+                    <SortableWishList
+                      list={list}
+                      itemProps={itemProps}
+                      enabled={isMine}
+                      onReorder={(ids) => wishesApi.reorderWishes(active, ids)}
+                    />
                   )}
                 </ViewTransition>
               )}

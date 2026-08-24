@@ -13,15 +13,20 @@ export default function WishItem({
   member,
   me,
   canEdit,
-  highlighted,
   variant = "list",
+  rank = 0, // 1, 2 ou 3 pour les trois premiers de la liste ; 0 sinon
   onDelete,
   onRequestEdit,
-  onToggleHighlight,
   onToggleReaction,
   openCommentsId,
   onToggleComments,
   onOpenComments,
+  // Glisser-déposer (fournis seulement en vue liste sur SA propre liste).
+  dragRef,
+  dragStyle,
+  dragAttributes,
+  dragListeners,
+  isDragging,
 }) {
   const open = openCommentsId === wish.id;
 
@@ -122,14 +127,22 @@ export default function WishItem({
 
   return (
     <li
+      ref={dragRef}
+      style={dragStyle}
+      {...dragAttributes}
+      {...dragListeners}
       className={
         "wish" +
-        (highlighted ? " wish-highlight" : "") +
-        (variant === "card" ? " wish-cardli" : "")
+        (variant === "card" ? " wish-cardli" : "") +
+        (isDragging ? " wish-dragging" : "") +
+        (rank && variant !== "card" ? " wish-rank wish-rank-" + rank : "")
       }
     >
       {variant === "card" ? (
         <div className="wish-card" onContextMenu={openMenu}>
+          {rank > 0 && (
+            <span className={"wish-rank-badge wish-rank-badge-" + rank}>{rank}</span>
+          )}
           {wish.link ? (
             <LinkThumb link={wish.link} big />
           ) : (
@@ -142,6 +155,18 @@ export default function WishItem({
         </div>
       ) : (
         <div className="wish-row" onContextMenu={openMenu}>
+          {dragListeners && (
+            <span className="wish-drag-handle" aria-hidden="true" title="Glisser pour réordonner">
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                <circle cx="5" cy="4" r="1.4" />
+                <circle cx="11" cy="4" r="1.4" />
+                <circle cx="5" cy="8" r="1.4" />
+                <circle cx="11" cy="8" r="1.4" />
+                <circle cx="5" cy="12" r="1.4" />
+                <circle cx="11" cy="12" r="1.4" />
+              </svg>
+            </span>
+          )}
           {wish.link && <LinkThumb link={wish.link} />}
           {nameEl}
           {controls}
@@ -154,11 +179,9 @@ export default function WishItem({
           wish={wish}
           member={member}
           me={me}
-          highlighted={highlighted}
           canEdit={canEdit}
           onClose={() => setMenu(null)}
           onOpenComments={onOpenComments}
-          onToggleHighlight={onToggleHighlight}
           onRequestEdit={onRequestEdit}
           onDelete={onDelete}
           onToggleReaction={onToggleReaction}

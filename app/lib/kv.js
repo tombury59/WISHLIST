@@ -12,13 +12,25 @@ function createMemoryKv() {
   // On accroche les données à globalThis pour qu'elles SURVIVENT aux
   // rechargements de module de Next en dev (Fast Refresh). Sinon la « base »
   // en mémoire se viderait à chaque édition de fichier.
-  const store = (globalThis.__memkv ||= { hashes: new Map(), lists: new Map() });
+  const store = (globalThis.__memkv ||= {
+    hashes: new Map(),
+    lists: new Map(),
+    scalars: new Map(),
+  });
   const hashes = store.hashes; // key -> Map(field -> value)
   const lists = store.lists; // key -> array
+  const scalars = (store.scalars ||= new Map()); // key -> valeur simple (ordre…)
 
   const clone = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
 
   return {
+    async get(key) {
+      return scalars.has(key) ? clone(scalars.get(key)) : null;
+    },
+    async set(key, value) {
+      scalars.set(key, clone(value));
+      return "OK";
+    },
     async hgetall(key) {
       const h = hashes.get(key);
       if (!h || h.size === 0) return null;

@@ -5,7 +5,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import WishItem from "./WishItem";
 
 // Carrousel (librairie Embla) : une carte devant, les voisines en retrait.
-export default function WishCarousel({ list, highlights, itemProps }) {
+export default function WishCarousel({ list, itemProps }) {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: "center",
     loop: false,
@@ -75,12 +75,12 @@ export default function WishCarousel({ list, highlights, itemProps }) {
       </button>
       <div className="embla" ref={emblaRef}>
         <div className="embla__container">
-          {list.map((w) => (
+          {list.map((w, i) => (
             <div className="embla__slide" key={w.id}>
               <WishItem
                 wish={w}
                 variant="card"
-                highlighted={highlights.includes(w.id)}
+                rank={i < 3 ? i + 1 : 0}
                 {...itemProps}
               />
             </div>

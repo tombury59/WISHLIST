@@ -28,6 +28,17 @@ export function removeWish(pin, { member, id }) {
   });
 }
 
+// Réordonne toute la liste d'un membre en un seul appel (le tableau `ids` est
+// l'ordre final voulu). `keepalive` permet à l'envoi d'aboutir même si l'app
+// se ferme / passe en arrière-plan juste après (flush de dernière seconde).
+export function reorderWishes(pin, { member, ids }) {
+  return request("/api/wishes", pin, {
+    method: "PATCH",
+    keepalive: true,
+    body: JSON.stringify({ op: "reorder", member, ids }),
+  });
+}
+
 // ---- Commentaires ----
 export function addComment(pin, { member, wishId, text, author }) {
   return request("/api/wishes", pin, {
