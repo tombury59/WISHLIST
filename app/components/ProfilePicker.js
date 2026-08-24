@@ -18,12 +18,15 @@ export default function ProfilePicker({ onChoose, biometricAvailable, onBiometri
     try {
       await onBiometric();
     } catch (e) {
-      // Annulation utilisateur ou aucune clé enregistrée sur cet appareil.
-      setError(
-        e?.name === "NotAllowedError"
-          ? "Déverrouillage annulé."
-          : "Aucune biométrie sur cet appareil. Choisis ton profil."
-      );
+      if (e?.name === "NotAllowedError") {
+        setError("Déverrouillage annulé.");
+      } else if (e?.name === "NoLocalCredential") {
+        // Hors ligne mais l'id de clé n'est pas mémorisé (biométrie activée
+        // avant cette mise à jour) : il faut la réactiver une fois en ligne.
+        setError("Réactive la biométrie une fois en ligne, puis réessaie.");
+      } else {
+        setError("Biométrie indisponible. Choisis ton profil.");
+      }
     } finally {
       setBusy(false);
     }

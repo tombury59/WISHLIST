@@ -4,47 +4,58 @@ import {
   isBiometricAvailable,
   registerBiometric,
   loginBiometric,
+  loginBiometricLocal,
 } from "../lib/webauthn-api";
 
-// Suivi LOCAL (par appareil) des profils qui ont activé la biométrie ici.
-function readEnrolled() {
+// Clés enrôlées LOCALEMENT sur cet appareil : [{ member, id }]. On mémorise
+// l'id de la clé pour pouvoir déverrouiller HORS LIGNE (sans serveur).
+// Tolère l'ancien format (tableau de noms) : ces entrées n'ont pas d'id et ne
+// serviront qu'en ligne tant qu'on n'a pas ré-activé la biométrie.
+function readCreds() {
   try {
     const a = JSON.parse(localStorage.getItem(STORAGE.biometric) || "[]");
-    return Array.isArray(a) ? a : [];
+    if (!Array.isArray(a)) return [];
+    return a.map((e) => (typeof e === "string" ? { member: e, id: null } : e));
   } catch {
     return [];
   }
 }
 
-// Déverrouillage biométrique : disponibilité de l'appareil, profils enrôlés
-// ici, et les deux actions (enrôler / déverrouiller). Le `pin` famille est
-// passé au moment de l'appel (il autorise la requête côté serveur).
+function writeCreds(creds) {
+  localStorage.setItem(STORAGE.biometric, JSON.stringify(creds));
+}
+
 export function useBiometric() {
   const [available, setAvailable] = useState(false);
-  const [enrolled, setEnrolled] = useState([]);
+  const [creds, setCreds] = useState([]);
 
   useEffect(() => {
     let alive = true;
     isBiometricAvailable().then((a) => {
       if (alive) setAvailable(a);
     });
-    setEnrolled(readEnrolled());
+    setCreds(readCreds());
     return () => {
       alive = false;
     };
   }, []);
 
   async function enroll(pin, member) {
-    await registerBiometric(pin, member);
-    const next = Array.from(new Set([...readEnrolled(), member]));
-    localStorage.setItem(STORAGE.biometric, JSON.stringify(next));
-    setEnrolled(next);
+    const id = await registerBiometric(pin, member);
+    const next = [...readCreds().filter((c) => c.member !== member), { member, id }];
+    writeCreds(next);
+    setCreds(next);
   }
 
-  // Renvoie le membre reconnu (lève si annulé / aucune clé).
+  // Renvoie le membre reconnu. En ligne : vérifié par le serveur. Hors ligne :
+  // prompt biométrique local, puis confiance locale (le PIN famille reste la
+  // barrière serveur).
   function unlock(pin) {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      return loginBiometricLocal(readCreds());
+    }
     return loginBiometric(pin);
   }
 
-  return { available, enrolled, enroll, unlock };
+  return { available, enrolled: creds.map((c) => c.member), enroll, unlock };
 }

@@ -16,6 +16,8 @@ export async function isBiometricAvailable() {
 }
 
 // Enrôle le profil `member` sur CET appareil (à faire une fois, connecté).
+// Renvoie l'ID de la clé créée, à mémoriser localement pour le déverrouillage
+// hors ligne.
 export async function registerBiometric(pin, member) {
   const { options, challengeId } = await request("/api/webauthn", pin, {
     method: "POST",
@@ -32,10 +34,11 @@ export async function registerBiometric(pin, member) {
       device: typeof navigator !== "undefined" ? navigator.userAgent : "",
     }),
   });
+  return response.id; // credentialID (base64url)
 }
 
-// Déverrouille par la biométrie et renvoie le membre reconnu. Lève une erreur
-// si l'utilisateur annule ou si aucune clé n'existe sur l'appareil.
+// Déverrouille par la biométrie EN LIGNE : le serveur fournit le défi et vérifie
+// la signature, puis renvoie le membre. Lève si annulé / aucune clé.
 export async function loginBiometric(pin) {
   const { options, challengeId } = await request("/api/webauthn", pin, {
     method: "POST",
@@ -47,4 +50,40 @@ export async function loginBiometric(pin) {
     body: JSON.stringify({ action: "login-verify", challengeId, response }),
   });
   return member;
+}
+
+// Déverrouille par la biométrie HORS LIGNE, sans serveur : on déclenche quand
+// même le capteur (le prompt est local), puis on fait confiance au résultat
+// localement (pas de vérification serveur — le PIN famille reste la vraie
+// barrière). `creds` = [{ id, member }] mémorisés à l'enrôlement.
+export async function loginBiometricLocal(creds) {
+  const usable = (creds || []).filter((c) => c && c.id);
+  if (usable.length === 0) {
+    const err = new Error("no-local-credential");
+    err.name = "NoLocalCredential";
+    throw err;
+  }
+  const challenge = new Uint8Array(16);
+  crypto.getRandomValues(challenge);
+  const b64Challenge = btoa(String.fromCharCode(...challenge))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+  const response = await startAuthentication({
+    optionsJSON: {
+      challenge: b64Challenge,
+      rpId: window.location.hostname,
+      allowCredentials: usable.map((c) => ({ id: c.id, type: "public-key" })),
+      userVerification: "required",
+      timeout: 60000,
+    },
+  });
+  const match = usable.find((c) => c.id === response.id);
+  if (!match) {
+    const err = new Error("unknown-credential");
+    err.name = "NoLocalCredential";
+    throw err;
+  }
+  return match.member;
 }
