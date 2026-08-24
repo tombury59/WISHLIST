@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getPinStatus, setUserPin, verifyUserPin } from "../lib/pins-api";
+import * as offline from "../lib/offline-store";
 import PinPad from "./PinPad";
 
 const MIN_LEN = 4;
@@ -12,7 +13,7 @@ const MIN_LEN = 4;
 // À la réussite, `onUnlock(member)` ouvre le profil ; `onCancel` revient au
 // choix des profils.
 export default function ProfilePinGate({ familyPin, member, onUnlock, onCancel }) {
-  const [mode, setMode] = useState("loading"); // loading | set | confirm | verify
+  const [mode, setMode] = useState("loading"); // loading | set | confirm | verify | offline
   const [pin, setPin] = useState("");
   const [firstCode, setFirstCode] = useState("");
   const [error, setError] = useState("");
@@ -26,9 +27,14 @@ export default function ProfilePinGate({ familyPin, member, onUnlock, onCancel }
         if (alive) setMode(data.set?.[member] ? "verify" : "set");
       })
       .catch(() => {
-        // En cas d'échec, on tente "set" ; si un code existe déjà, l'API
-        // renverra 409 et on basculera en "verify".
-        if (alive) setMode("set");
+        if (!alive) return;
+        // Échec réseau : si on a une empreinte locale du code (vérifié en ligne
+        // auparavant), on peut vérifier HORS LIGNE. Sinon, hors ligne sans
+        // empreinte, ce profil n'est pas déverrouillable ici → écran d'info.
+        if (offline.hasUserPinHash(member)) setMode("verify");
+        else if (typeof navigator !== "undefined" && !navigator.onLine)
+          setMode("offline");
+        else setMode("set"); // en ligne : un 409 basculera en "verify" au besoin
       });
     return () => {
       alive = false;
@@ -67,6 +73,7 @@ export default function ProfilePinGate({ familyPin, member, onUnlock, onCancel }
       setBusy(true);
       try {
         await setUserPin(familyPin, { member, code: pin });
+        await offline.setUserPinHash(member, pin); // pour la vérif hors ligne
         onUnlock(member);
       } catch (e) {
         if (e?.status === 409) {
@@ -90,14 +97,20 @@ export default function ProfilePinGate({ familyPin, member, onUnlock, onCancel }
     try {
       const { ok } = await verifyUserPin(familyPin, { member, code: pin });
       if (ok) {
+        await offline.setUserPinHash(member, pin); // mémorise pour le hors ligne
         onUnlock(member);
       } else {
         setError("Code incorrect");
         setPin("");
       }
     } catch {
-      setError("Erreur, réessaie");
-      setPin("");
+      // Échec réseau : vérification HORS LIGNE contre l'empreinte locale.
+      if (await offline.matchUserPin(member, pin)) {
+        onUnlock(member);
+      } else {
+        setError("Code incorrect");
+        setPin("");
+      }
     } finally {
       setBusy(false);
     }
@@ -108,6 +121,24 @@ export default function ProfilePinGate({ familyPin, member, onUnlock, onCancel }
       <main className="gate">
         <div className="gate-card">
           <p className="gate-sub">Chargement…</p>
+        </div>
+      </main>
+    );
+  }
+
+  // Hors ligne et jamais déverrouillé sur cet appareil : rien à vérifier en local.
+  if (mode === "offline") {
+    return (
+      <main className="gate">
+        <div className="gate-card">
+          <p className="gate-title">{member}</p>
+          <p className="gate-sub">
+            Ce profil n'a pas encore été ouvert hors ligne sur cet appareil.
+            Reconnecte-toi une fois pour l'utiliser sans réseau.
+          </p>
+          <button type="button" className="gate-back" onClick={onCancel}>
+            ‹ Changer de profil
+          </button>
         </div>
       </main>
     );

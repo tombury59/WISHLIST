@@ -50,7 +50,7 @@ export default function AppHeader({
             {bioBusy
               ? "…"
               : bioError ||
-                (biometricEnrolled ? "🔒 Réactiver la biométrie" : "🔒 Activer la biométrie")}
+                (biometricEnrolled ? "🔒" : "🔒 Activer la biométrie")}
           </button>
         )}
         {bioDone && <span className="bio-done">🔒 Biométrie activée</span>}

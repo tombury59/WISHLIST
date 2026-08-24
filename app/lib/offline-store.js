@@ -47,3 +47,41 @@ export async function matchPin(pin) {
     return false;
   }
 }
+
+// --- Codes de PROFIL (par membre), pour la vérification hors ligne ---
+// Empreintes { membre -> sha256(code) }, remplies après une vérification EN
+// LIGNE réussie. Permet de déverrouiller un profil au code quand on est hors
+// ligne, sans jamais stocker le code en clair.
+const USERPINS_KEY = "family-userpinhash";
+
+function readUserPins() {
+  try {
+    const o = JSON.parse(localStorage.getItem(USERPINS_KEY) || "{}");
+    return o && typeof o === "object" ? o : {};
+  } catch {
+    return {};
+  }
+}
+
+export async function setUserPinHash(member, pin) {
+  try {
+    const all = readUserPins();
+    all[member] = await sha256(pin);
+    localStorage.setItem(USERPINS_KEY, JSON.stringify(all));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function hasUserPinHash(member) {
+  return Boolean(readUserPins()[member]);
+}
+
+export async function matchUserPin(member, pin) {
+  try {
+    const stored = readUserPins()[member];
+    return Boolean(stored) && stored === (await sha256(pin));
+  } catch {
+    return false;
+  }
+}

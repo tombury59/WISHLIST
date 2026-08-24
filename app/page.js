@@ -117,6 +117,7 @@ export default function Home() {
     return (
       <ProfilePicker
         onChoose={setPendingProfile}
+        online={online}
         biometricAvailable={biometric.available}
         onBiometric={async () => {
           const member = await biometric.unlock(pin);

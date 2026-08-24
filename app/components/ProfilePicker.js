@@ -1,15 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MEMBERS } from "../lib/members";
 import { avatarColor } from "../lib/format";
+import { hasUserPinHash } from "../lib/offline-store";
 
 // « Qui es-tu ? » — choix du profil, à la Netflix.
 // La biométrie (si disponible sur l'appareil) est proposée EN PRIORITÉ ; la
 // grille des profils sert de repli (« autre méthode »).
-export default function ProfilePicker({ onChoose, biometricAvailable, onBiometric }) {
+export default function ProfilePicker({ onChoose, online = true, biometricAvailable, onBiometric }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  // Hors ligne : seuls les profils déjà ouverts sur cet appareil (empreinte de
+  // code locale) sont déverrouillables. Calculé au montage (lecture localStorage).
+  const [offlineMembers, setOfflineMembers] = useState(null);
+  useEffect(() => {
+    setOfflineMembers(MEMBERS.filter((m) => hasUserPinHash(m)));
+  }, []);
 
   async function unlock() {
     if (busy) return;
@@ -64,19 +72,26 @@ export default function ProfilePicker({ onChoose, biometricAvailable, onBiometri
         )}
 
         <div className="profile-grid">
-          {MEMBERS.map((m) => (
-            <button
-              key={m}
-              type="button"
-              className="profile-tile"
-              onClick={() => onChoose(m)}
-            >
-              <span className="profile-avatar" style={{ background: avatarColor(m) }}>
-                {m[0]}
-              </span>
-              <span className="profile-name">{m}</span>
-            </button>
-          ))}
+          {MEMBERS.map((m) => {
+            // Verrouillé si hors ligne et pas d'empreinte locale pour ce profil.
+            const locked =
+              !online && offlineMembers !== null && !offlineMembers.includes(m);
+            return (
+              <button
+                key={m}
+                type="button"
+                className={"profile-tile" + (locked ? " profile-tile--locked" : "")}
+                onClick={() => onChoose(m)}
+                disabled={locked}
+                title={locked ? "Indisponible hors ligne sur cet appareil" : undefined}
+              >
+                <span className="profile-avatar" style={{ background: avatarColor(m) }}>
+                  {m[0]}
+                </span>
+                <span className="profile-name">{m}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </main>

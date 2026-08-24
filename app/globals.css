@@ -1185,6 +1185,17 @@ body {
   transform: scale(1.05);
 }
 
+/* Profil verrouillé hors ligne : grisé, non cliquable. */
+.profile-tile--locked {
+  cursor: not-allowed;
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+.profile-tile--locked:hover .profile-avatar {
+  border-color: transparent;
+  transform: none;
+}
+
 .profile-name {
   color: var(--muted);
   font-size: 14px;
