@@ -10,6 +10,7 @@ export default function AppHeader({
   onChangeProfile,
   onOpenHistory,
   canEnableBiometric,
+  biometricEnrolled,
   onEnableBiometric,
 }) {
   const [bioBusy, setBioBusy] = useState(false);
@@ -46,7 +47,10 @@ export default function AppHeader({
             disabled={bioBusy}
             title="Se connecter avec la biométrie la prochaine fois"
           >
-            {bioBusy ? "…" : bioError || "🔒 Activer la biométrie"}
+            {bioBusy
+              ? "…"
+              : bioError ||
+                (biometricEnrolled ? "🔒 Réactiver la biométrie" : "🔒 Activer la biométrie")}
           </button>
         )}
         {bioDone && <span className="bio-done">🔒 Biométrie activée</span>}

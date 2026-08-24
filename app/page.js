@@ -167,9 +167,8 @@ export default function Home() {
             me={me}
             onChangeProfile={() => setMe(null)}
             onOpenHistory={historyApi.openHistory}
-            canEnableBiometric={
-              online && biometric.available && !biometric.enrolled.includes(me)
-            }
+            canEnableBiometric={online && biometric.available}
+            biometricEnrolled={biometric.enrolled.includes(me)}
             onEnableBiometric={() => biometric.enroll(pin, me)}
           />
 
