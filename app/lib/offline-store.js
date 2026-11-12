@@ -2,6 +2,7 @@
 // démarrage instantané. Plus une empreinte du PIN famille pour autoriser une
 // reprise de session hors ligne sans jamais stocker le code en clair.
 import { get, set, del } from "idb-keyval";
+import { migrateLocalNames } from "./migrate-local";
 
 const WISHES_KEY = "wishes-cache";
 const PINHASH_KEY = "family-pinhash"; // localStorage
@@ -65,6 +66,7 @@ export async function matchPin(pin) {
 const USERPINS_KEY = "family-userpinhash";
 
 function readUserPins() {
+  migrateLocalNames();
   try {
     const o = JSON.parse(localStorage.getItem(USERPINS_KEY) || "{}");
     return o && typeof o === "object" ? o : {};

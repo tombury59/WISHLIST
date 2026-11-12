@@ -3,7 +3,7 @@
 Petite appli web où chaque membre de la famille ajoute ses souhaits
 (nom de l'objet + lien facultatif). Protégée par un code PIN partagé.
 
-Membres : **Lilou, Sam, Tom, Théo, Maman, Papa**
+Membres : **Lilou, Sam, Tom, Théo, Béné, Denis, Katell, David, Betty, Ludivine**
 (modifiable dans `app/lib/members.js`).
 
 ---

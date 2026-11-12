@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { STORAGE } from "../lib/constants";
+import { migrateLocalNames } from "../lib/migrate-local";
 import {
   isBiometricAvailable,
   registerBiometric,
@@ -12,6 +13,7 @@ import {
 // Tolère l'ancien format (tableau de noms) : ces entrées n'ont pas d'id et ne
 // serviront qu'en ligne tant qu'on n'a pas ré-activé la biométrie.
 function readCreds() {
+  migrateLocalNames();
   try {
     const a = JSON.parse(localStorage.getItem(STORAGE.biometric) || "[]");
     if (!Array.isArray(a)) return [];
