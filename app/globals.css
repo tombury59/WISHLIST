@@ -1733,6 +1733,15 @@ body {
   /* En-tête et onglets occupent toute la largeur de la colonne : ainsi, quand
      les commentaires sont ouverts, « Historique » va à l'extrême droite
      (bord droit de la zone commentaires), pas au milieu. */
+  /* Onglets : passent à la ligne s'il y a trop de prénoms. width:0 +
+     min-width:100% -> ils n'élargissent pas la colonne (sinon le panneau
+     n'est plus centré) et en prennent quand même toute la largeur. */
+  .tabs {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    width: 0;
+    min-width: 100%;
+  }
   /* Rangée : panneau + zone commentaires côte à côte, même hauteur. */
   .panel-row {
     display: flex;
