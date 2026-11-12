@@ -1748,8 +1748,16 @@ body {
     flex-direction: row;
     align-items: stretch;
   }
+  /* La colonne est dimensionnée par son contenu : sans largeur explicite sur
+     le panneau, elle changeait de taille selon la liste affichée (flex-basis
+     ne compte pas dans la largeur intrinsèque). width fixe -> colonne stable ;
+     min-width:0 laisse quand même rétrécir si la fenêtre est trop étroite. */
+  .app-col {
+    min-width: 0;
+  }
   .panel {
-    flex: 1 1 620px;
+    flex: 0 1 620px;
+    width: 620px;
     min-width: 0;
     max-width: 620px;
   }
