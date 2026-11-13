@@ -213,8 +213,9 @@ export default function Home() {
     counts[m] = (wishesApi.wishes[m] || []).filter((w) => !w.disabled).length;
   }
 
-  // « À offrir » : mes réservations, regroupées par personne. Construit à partir
-  // des données déjà en mémoire (aucune requête).
+  // « Cadeaux » : mes réservations (à offrir), regroupées par personne, et mes
+  // souhaits marqués « déjà reçu ». Construit à partir des données déjà en
+  // mémoire (aucune requête).
   const giftGroups = [];
   for (const m of MEMBERS) {
     if (m === me) continue;
@@ -225,6 +226,7 @@ export default function Home() {
     if (items.length) giftGroups.push({ member: m, items });
   }
   const giftCount = giftGroups.reduce((n, g) => n + g.items.length, 0);
+  const received = (wishesApi.wishes[me] || []).filter((w) => w.disabled);
 
   // Props communes à chaque souhait (liste ou carrousel).
   const itemProps = {
@@ -417,12 +419,14 @@ export default function Home() {
           </>
         )}
 
-        {/* ================= À OFFRIR ================= */}
+        {/* ================= CADEAUX (à offrir / reçus) ================= */}
         {section === "gifts" && (
           <GiftsPage
             groups={giftGroups}
+            received={received}
             online={online}
             onUnreserve={resa.unreserve}
+            onRestore={(wishId) => wishesApi.setWishDisabled(me, wishId, false)}
             onOpenList={openList}
           />
         )}

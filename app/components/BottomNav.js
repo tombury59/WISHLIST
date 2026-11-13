@@ -19,7 +19,7 @@ export default function BottomNav({ me, section, giftCount, onGo }) {
       {item("lists", "Listes", <Icon name="list" size={22} />)}
       {item(
         "gifts",
-        "À offrir",
+        "Cadeaux",
         <>
           <Icon name="gift" size={22} />
           {giftCount > 0 && <span className="tabbar-badge">{giftCount}</span>}

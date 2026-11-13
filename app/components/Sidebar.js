@@ -2,14 +2,14 @@ import { MEMBERS } from "../lib/members";
 import Avatar from "./Avatar";
 import Icon from "./Icon";
 
-// Navigation latérale (grand écran) : ma liste, mes cadeaux à offrir,
+// Navigation latérale (grand écran) : ma liste, les cadeaux (à offrir / reçus),
 // l'activité, puis toute la famille, et mon compte en bas.
 export default function Sidebar({
   me,
   section,
   active,
   counts, // { membre: nb de souhaits actifs }
-  giftCount, // nb de cadeaux que j'ai réservés
+  giftCount, // nb de cadeaux que j'ai réservés (à offrir)
   onOpenList,
   onGo,
 }) {
@@ -42,7 +42,7 @@ export default function Sidebar({
           onClick={() => onGo("gifts")}
         >
           <Icon name="gift" size={18} />
-          <span className="side-label">À offrir</span>
+          <span className="side-label">Cadeaux</span>
           {giftCount > 0 && <span className="count count-accent">{giftCount}</span>}
         </button>
         <button

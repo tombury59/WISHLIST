@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 
-// Rubrique affichée : listes, cadeaux à offrir, activité, compte.
+// Rubrique affichée : listes, cadeaux (à offrir / reçus), activité, compte.
 //
-// L'état vit dans le « hash » de l'URL (#a-offrir…) : le bouton Retour du
+// L'état vit dans le « hash » de l'URL (#cadeaux…) : le bouton Retour du
 // téléphone (ou du navigateur) revient donc à la rubrique précédente au lieu de
 // quitter l'appli — important pour une PWA installée. Aucune requête serveur :
 // tout se passe dans le navigateur.
 const HASHES = {
   lists: "",
-  gifts: "#a-offrir",
+  gifts: "#cadeaux",
   activity: "#activite",
   account: "#compte",
 };
