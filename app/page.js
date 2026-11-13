@@ -384,6 +384,7 @@ export default function Home() {
     {
       target: "nav-gifts",
       mine: true,
+      mascot: "gift",
       text: (
         <>
           Sur la liste des autres, tu peux <strong>réserver</strong> un cadeau&nbsp;: la

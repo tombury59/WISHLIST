@@ -2,7 +2,8 @@
 // Il se place au bord d'une bulle (tuto, « Psssttt ») :
 //   pose="peek"  : il dépasse de derrière la bulle, pattes posées sur le bord ;
 //   pose="wave"  : il salue, assis sur la bulle ;
-//   pose="dance" : il bondit de joie (la « danse de guerre » du furet).
+//   pose="dance" : il bondit de joie (la « danse de guerre » du furet) ;
+//   pose="gift"  : debout sur la bulle, un cadeau dans les pattes.
 // `at` = coin de la bulle : "top-left" | "top-right" | "bottom-left" | "bottom-right"
 // (en bas, il est suspendu la tête en bas, comme un furet qui se faufile).
 
@@ -10,11 +11,13 @@ const SRC = {
   peek: "/clovis/clovis-bord.png",
   wave: "/clovis/clovis-coucou.png",
   dance: "/clovis/clovis-bond.png",
+  gift: "/clovis/clovis-trouve.png",
 };
 const SIZE = {
   peek: [420, 299],
   wave: [410, 420],
   dance: [420, 305],
+  gift: [358, 420],
 };
 
 export default function Clovis({ pose = "peek", at = "top-right", className = "" }) {
@@ -30,4 +33,4 @@ export default function Clovis({ pose = "peek", at = "top-right", className = ""
 
 // Hauteur (px) que Clovis occupe au-dessus / au-dessous de la bulle : sert à
 // garder la bulle assez loin des bords de l'écran.
-export const CLOVIS_ROOM = { peek: 44, wave: 84, dance: 84 };
+export const CLOVIS_ROOM = { peek: 44, wave: 84, dance: 84, gift: 90 };

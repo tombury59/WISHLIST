@@ -3592,6 +3592,7 @@ button.reserve {
 .clovis-peek { width: 72px; overflow: hidden; }
 .clovis-wave { width: 84px; }
 .clovis-dance { width: 100px; }
+.clovis-gift { width: 76px; }
 .nudge .clovis-peek { width: 64px; }
 
 /* Au-dessus de la bulle. « peek » : le bas plat de la tête sur le bord, les
@@ -3621,8 +3622,9 @@ button.reserve {
   100% { transform: none; }
 }
 
-/* Il arrive d'un bond, puis se balance en saluant */
-.clovis-wave .clovis-inner {
+/* Il arrive d'un bond, puis se balance (en saluant ou avec son cadeau) */
+.clovis-wave .clovis-inner,
+.clovis-gift .clovis-inner {
   transform-origin: 50% 100%;
   animation: cl-hop-in 0.55s 0.2s cubic-bezier(0.3, 1.4, 0.5, 1) both,
     cl-sway 1.6s 0.8s ease-in-out infinite alternate;
