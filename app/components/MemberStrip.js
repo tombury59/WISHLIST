@@ -15,7 +15,7 @@ export default function MemberStrip({ me, active, counts, onSelect }) {
   }, [active]);
 
   return (
-    <nav className="strip" aria-label="Listes de la famille">
+    <nav className="strip" aria-label="Listes de la famille" data-tour="family">
       {order.map((m) => (
         <button
           key={m}

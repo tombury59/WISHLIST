@@ -3416,3 +3416,152 @@ button.reserve {
     display: none;
   }
 }
+
+/* ------------------------------------------------------------------
+   15. Visite guidée (première visite)
+   Même bulle que « Psssttt », plus un projecteur sur l'élément présenté.
+   ------------------------------------------------------------------ */
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  animation: tour-fade 0.25s ease both;
+}
+
+.tour.is-leaving {
+  animation: tour-fade 0.22s ease reverse forwards;
+}
+
+@keyframes tour-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tour-shade {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+/* Avec un projecteur : c'est l'ombre géante du projecteur qui assombrit. */
+.tour-shade.has-spot {
+  background: transparent;
+}
+
+.tour-spot {
+  position: fixed;
+  border-radius: 16px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.62);
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+  pointer-events: none;
+  transition: top 0.35s cubic-bezier(0.3, 1.2, 0.4, 1), left 0.35s cubic-bezier(0.3, 1.2, 0.4, 1),
+    width 0.35s cubic-bezier(0.3, 1.2, 0.4, 1), height 0.35s cubic-bezier(0.3, 1.2, 0.4, 1);
+}
+
+.tour-spot::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 2px solid var(--accent);
+  animation: tour-ring 1.6s ease-out infinite;
+}
+
+@keyframes tour-ring {
+  0% { inset: -2px; opacity: 0.9; }
+  100% { inset: -12px; opacity: 0; }
+}
+
+.tour-bubble {
+  position: fixed;
+  width: min(320px, calc(100vw - 20px));
+  padding: 14px 14px 12px;
+  border: 1px solid var(--accent-line);
+  border-radius: 18px;
+  background: var(--surface-3);
+  box-shadow: var(--shadow), 0 0 0 4px rgba(255, 125, 104, 0.08);
+  animation: tour-pop 0.45s cubic-bezier(0.25, 1.4, 0.45, 1) both;
+}
+
+.tour-side-top { transform-origin: var(--arrow) -12px; }
+.tour-side-bottom { transform-origin: var(--arrow) calc(100% + 12px); }
+
+@keyframes tour-pop {
+  0% { transform: scale(0.3); opacity: 0; }
+  60% { opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+
+/* La pointe de la bulle, dirigée vers le projecteur */
+.tour-side-top::after,
+.tour-side-bottom::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--arrow) - 8px);
+  width: 16px;
+  height: 16px;
+  background: var(--surface-3);
+  transform: rotate(45deg);
+}
+
+.tour-side-top::after {
+  top: -8px;
+  border-left: 1px solid var(--accent-line);
+  border-top: 1px solid var(--accent-line);
+}
+
+.tour-side-bottom::after {
+  bottom: -8px;
+  border-right: 1px solid var(--accent-line);
+  border-bottom: 1px solid var(--accent-line);
+}
+
+.tour-title {
+  margin-bottom: 4px;
+  padding-right: 22px;
+  font-family: var(--font-title);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.tour-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tour-dots {
+  display: flex;
+  gap: 5px;
+  margin-right: auto;
+}
+
+.tour-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  transition: width 0.25s ease, background 0.25s ease;
+}
+
+.tour-dot.is-done {
+  background: var(--accent-line);
+}
+
+.tour-dot.is-on {
+  width: 16px;
+  background: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour,
+  .tour-bubble,
+  .tour-spot::after {
+    animation: none;
+  }
+  .tour-spot {
+    transition: none;
+  }
+}

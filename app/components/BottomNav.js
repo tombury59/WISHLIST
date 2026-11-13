@@ -12,6 +12,7 @@ export default function BottomNav({ me, section, giftCount, onGo, nudge = false 
         (nudge && key === "account" ? " is-nudged" : "")
       }
       onClick={() => onGo(key)}
+      data-tour={"nav-" + key}
       aria-current={section === key ? "page" : undefined}
     >
       <span className="tabbar-icon">{icon}</span>

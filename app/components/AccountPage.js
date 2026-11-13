@@ -25,6 +25,7 @@ export default function AccountPage({
   onOpenInstallGuide,
   flashInstall = false, // arrivée depuis la bulle « Psssttt » : la carte clignote
   onClearCache,
+  onReplayTour,
   onChangeProfile,
   onLogout,
 }) {
@@ -262,6 +263,10 @@ export default function AccountPage({
 
       {/* Profil / session */}
       <div className="account-actions">
+        <button className="btn btn-soft btn-block" onClick={onReplayTour}>
+          <Icon name="book" size={17} />
+          Revoir la visite guidée
+        </button>
         <button className="btn btn-soft btn-block" onClick={onChangeProfile}>
           <Icon name="user" size={17} />
           Changer de profil

@@ -27,7 +27,7 @@ export default function AddForm({ onAdd }) {
   }
 
   return (
-    <form className="card add-form" onSubmit={handleSubmit}>
+    <form className="card add-form" onSubmit={handleSubmit} data-tour="add">
       <input
         className="field add-name"
         placeholder="Ajouter une envie…"

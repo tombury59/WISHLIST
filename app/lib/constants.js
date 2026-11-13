@@ -19,4 +19,5 @@ export const STORAGE = {
   view: "family-view", // localStorage : mode d'affichage (list / carousel)
   biometric: "family-biometric", // localStorage : profils enrôlés (biométrie) sur cet appareil
   installHint: "family-install-hint", // localStorage : bandeau « Installe l'appli » masqué
+  tour: "family-tour", // localStorage : tuto de première visite déjà vu
 };

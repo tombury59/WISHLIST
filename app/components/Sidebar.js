@@ -40,6 +40,7 @@ export default function Sidebar({
         <button
           className={"side-item" + (section === "gifts" ? " is-active" : "")}
           onClick={() => onGo("gifts")}
+          data-tour="nav-gifts"
         >
           <Icon name="gift" size={18} />
           <span className="side-label">Cadeaux</span>
@@ -48,6 +49,7 @@ export default function Sidebar({
         <button
           className={"side-item" + (section === "activity" ? " is-active" : "")}
           onClick={() => onGo("activity")}
+          data-tour="nav-activity"
         >
           <Icon name="clock" size={18} />
           <span className="side-label">Activité</span>
@@ -55,7 +57,7 @@ export default function Sidebar({
       </nav>
 
       <p className="side-title">La famille</p>
-      <nav className="side-nav side-members" aria-label="Listes de la famille">
+      <nav className="side-nav side-members" aria-label="Listes de la famille" data-tour="family">
         {others.map((m) => (
           <button
             key={m}
@@ -72,6 +74,7 @@ export default function Sidebar({
       <button
         className={"side-item side-account" + (section === "account" ? " is-active" : "")}
         onClick={() => onGo("account")}
+        data-tour="nav-account"
       >
         <Avatar name={me} size="sm" />
         <span className="side-label">

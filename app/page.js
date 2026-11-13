@@ -35,6 +35,7 @@ import OfflineBanner from "./components/OfflineBanner";
 import AccountPage from "./components/AccountPage";
 import InstallGuide from "./components/InstallGuide";
 import InstallNudge from "./components/InstallNudge";
+import Tour from "./components/Tour";
 import { isTouchPlatform } from "./lib/install";
 import { STORAGE } from "./lib/constants";
 import * as profileApi from "./lib/profile-api";
@@ -84,6 +85,29 @@ export default function Home() {
     go("account");
     setFlashInstall(true);
     setTimeout(() => setFlashInstall(false), 2600);
+  }
+
+  // Visite guidée de la première visite (retenue dans le navigateur).
+  const [tourOpen, setTourOpen] = useState(false);
+  const [tourSeen, setTourSeen] = useState(true); // true tant qu'on n'a pas lu le réglage
+  useEffect(() => {
+    let seen = false;
+    try {
+      seen = localStorage.getItem(STORAGE.tour) === "1";
+    } catch {
+      /* stockage indisponible : on montre le tuto */
+    }
+    setTourSeen(seen);
+    if (!seen) setTourOpen(true);
+  }, []);
+  function closeTour() {
+    setTourOpen(false);
+    setTourSeen(true);
+    try {
+      localStorage.setItem(STORAGE.tour, "1");
+    } catch {
+      /* ignore */
+    }
   }
 
   async function installNow() {
@@ -292,6 +316,84 @@ export default function Home() {
     onUnreserve: resa.unreserve,
   };
 
+  // Étapes de la visite guidée (cibles repérées par data-tour).
+  const tourSteps = [
+    {
+      title: `Bienvenue ${me} !`,
+      text: "Ici, toute la famille partage ses envies de cadeaux. On fait le tour en 30 secondes ?",
+      cta: "Allons-y",
+      mine: true,
+    },
+    {
+      target: "family",
+      mine: true,
+      text: (
+        <>
+          Voici <strong>la famille</strong>. Touche un prénom pour ouvrir sa liste d'envies.
+        </>
+      ),
+    },
+    {
+      target: "add",
+      mine: true,
+      text: (
+        <>
+          Ça, c'est <strong>ta liste</strong>. Ajoute une envie, avec un lien si tu veux.
+          Ensuite, glisse-les pour les classer&nbsp;: les trois premières sont mises en avant.
+        </>
+      ),
+    },
+    {
+      target: "tools",
+      mine: true,
+      text:
+        fullList.length > 0 ? (
+          <>
+            <strong>↻</strong> recharge les listes pour voir les dernières nouveautés. À côté,
+            choisis l'affichage&nbsp;: <strong>une carte à la fois</strong> (à faire défiler) ou{" "}
+            <strong>la liste complète</strong>.
+          </>
+        ) : (
+          <>
+            <strong>↻</strong> recharge les listes pour voir les dernières nouveautés. Dès qu'il y
+            aura des envies, tu pourras aussi choisir l'affichage&nbsp;: une carte à la fois ou la
+            liste complète.
+          </>
+        ),
+    },
+    {
+      target: "nav-gifts",
+      mine: true,
+      text: (
+        <>
+          Sur la liste des autres, tu peux <strong>réserver</strong> un cadeau&nbsp;: la
+          personne ne le saura jamais&nbsp;! Tes réservations et tes cadeaux reçus sont rangés
+          dans <strong>Cadeaux</strong>.
+        </>
+      ),
+    },
+    {
+      target: "nav-activity",
+      mine: true,
+      text: (
+        <>
+          <strong>Activité</strong>&nbsp;: les dernières nouveautés de la famille (ajouts,
+          commentaires…).
+        </>
+      ),
+    },
+    {
+      target: "nav-account",
+      mine: true,
+      text: (
+        <>
+          Et ton <strong>compte</strong>&nbsp;: ta couleur, ton code, et de quoi installer
+          Souhaits comme une vraie appli. Bonne liste&nbsp;!
+        </>
+      ),
+    },
+  ];
+
   // Le souhait dont les commentaires sont ouverts.
   const commentWish = fullList.find((w) => w.id === openComments) || null;
 
@@ -363,7 +465,7 @@ export default function Home() {
                           }`}
                     </p>
                   </div>
-                  <div className="page-tools">
+                  <div className="page-tools" data-tour="tools">
                     <RefreshButton onRefresh={refreshAll} />
                     {fullList.length > 0 && (
                       <ViewSwitch view={view} onChange={changeView} />
@@ -531,6 +633,10 @@ export default function Home() {
             onOpenInstallGuide={() => setGuideOpen(true)}
             flashInstall={flashInstall}
             onClearCache={() => wishesApi.clearOfflineData()}
+            onReplayTour={() => {
+              openList(me);
+              setTourOpen(true);
+            }}
             onChangeProfile={() => {
               setOpenComments(null);
               go("lists");
@@ -544,6 +650,8 @@ export default function Home() {
       {/* Téléphone, appli pas encore installée : bulle « Psssttt » au-dessus
           de l'onglet Compte (une seule fois, jusqu'à ce qu'elle soit fermée). */}
       {install.platform &&
+        tourSeen &&
+        !tourOpen &&
         !install.installed &&
         !hintHidden &&
         section !== "account" &&
@@ -568,6 +676,16 @@ export default function Home() {
             <CommentsPanel key={commentWish.id} variant="modal" {...commentsProps} />
           </div>
         </div>
+      )}
+
+      {tourOpen && (
+        <Tour
+          steps={tourSteps}
+          onStep={(s) => {
+            if (s.mine && (section !== "lists" || active !== me)) openList(me);
+          }}
+          onClose={closeTour}
+        />
       )}
 
       {guideOpen && (
