@@ -2,13 +2,13 @@
 export default function ConfirmModal({ message, onCancel, onConfirm }) {
   return (
     <div className="overlay" onClick={onCancel}>
-      <div className="confirm-card" onClick={(e) => e.stopPropagation()}>
-        <p className="confirm-message">{message}</p>
-        <div className="confirm-actions">
-          <button className="btn-ghost" onClick={onCancel}>
+      <div className="sheet dialog dialog-confirm" onClick={(e) => e.stopPropagation()}>
+        <p className="dialog-message">{message}</p>
+        <div className="dialog-actions">
+          <button className="btn btn-quiet" onClick={onCancel}>
             Annuler
           </button>
-          <button className="btn-danger" onClick={onConfirm}>
+          <button className="btn btn-danger" onClick={onConfirm}>
             Supprimer
           </button>
         </div>

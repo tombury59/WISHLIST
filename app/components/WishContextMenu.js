@@ -20,7 +20,12 @@ export default function WishContextMenu({
   onOpenComments,
   onRequestEdit,
   onDelete,
+  onSetDisabled,
   onToggleReaction,
+  canReserve = false,
+  reservation = null,
+  onReserve,
+  onUnreserve,
 }) {
   const reactions = wish.reactions || {};
 
@@ -68,7 +73,7 @@ export default function WishContextMenu({
           className="ctx-item"
           onClick={() => run(() => copyToClipboard(wish.name))}
         >
-          Copier le nom de l'objet
+          Copier le nom
         </button>
         {wish.link && (
           <button
@@ -76,7 +81,7 @@ export default function WishContextMenu({
             className="ctx-item"
             onClick={() => run(() => copyToClipboard(normalizeUrl(wish.link)))}
           >
-            Copier le lien de l'objet
+            Copier le lien
           </button>
         )}
 
@@ -89,8 +94,31 @@ export default function WishContextMenu({
               className="ctx-item"
               onClick={() => run(() => onOpenComments(wish.id))}
             >
-              Ajouter un commentaire
+              Commenter
             </button>
+            {/* Réservation (liste de quelqu'un d'autre uniquement) */}
+            {canReserve &&
+              (wish.disabled && !reservation ? null : !reservation ? (
+                <button
+                  type="button"
+                  className="ctx-item"
+                  onClick={() => run(() => onReserve(member, wish.id))}
+                >
+                  Réserver ce cadeau
+                </button>
+              ) : reservation.by === me ? (
+                <button
+                  type="button"
+                  className="ctx-item"
+                  onClick={() => run(() => onUnreserve(member, wish.id))}
+                >
+                  Annuler ma réservation
+                </button>
+              ) : (
+                <button type="button" className="ctx-item" disabled>
+                  Réservé par {reservation.by}
+                </button>
+              ))}
           </>
         )}
 
@@ -100,10 +128,19 @@ export default function WishContextMenu({
             <div className="ctx-sep" />
             <button
               type="button"
-              className="ctx-item ctx-item-edit"
+              className="ctx-item"
               onClick={() => run(() => onRequestEdit(member, wish))}
             >
               Modifier
+            </button>
+            <button
+              type="button"
+              className="ctx-item"
+              onClick={() =>
+                run(() => onSetDisabled(member, wish.id, !wish.disabled))
+              }
+            >
+              {wish.disabled ? "Remettre dans la liste" : "Marquer comme déjà reçu"}
             </button>
             <button
               type="button"

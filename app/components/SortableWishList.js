@@ -25,7 +25,7 @@ import WishItem from "./WishItem";
 
 // Un souhait déplaçable : on branche useSortable et on transmet la « poignée »
 // (toute la ligne) + le style de translation à WishItem.
-function SortableWish({ wish, rank, itemProps }) {
+function SortableWish({ wish, position, itemProps }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: wish.id });
 
@@ -38,7 +38,7 @@ function SortableWish({ wish, rank, itemProps }) {
     <WishItem
       wish={wish}
       variant="list"
-      rank={rank}
+      position={position}
       {...itemProps}
       dragRef={setNodeRef}
       dragStyle={style}
@@ -71,7 +71,7 @@ export default function SortableWishList({ list, itemProps, enabled, onReorder }
             key={w.id}
             wish={w}
             variant="list"
-            rank={i < 3 ? i + 1 : 0}
+            position={i + 1}
             {...itemProps}
           />
         ))}
@@ -108,7 +108,7 @@ export default function SortableWishList({ list, itemProps, enabled, onReorder }
             <SortableWish
               key={w.id}
               wish={w}
-              rank={i < 3 ? i + 1 : 0}
+              position={i + 1}
               itemProps={itemProps}
             />
           ))}

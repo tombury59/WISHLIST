@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getPinStatus, setUserPin, verifyUserPin } from "../lib/pins-api";
 import * as offline from "../lib/offline-store";
 import PinPad from "./PinPad";
+import Avatar from "./Avatar";
 
 const MIN_LEN = 4;
 
@@ -131,6 +132,9 @@ export default function ProfilePinGate({ familyPin, member, onUnlock, onCancel }
     return (
       <main className="gate">
         <div className="gate-card">
+          <div className="gate-badge">
+            <Avatar name={member} size="xl" />
+          </div>
           <p className="gate-title">{member}</p>
           <p className="gate-sub">
             Ce profil n'a pas encore été ouvert hors ligne sur cet appareil.
@@ -153,6 +157,7 @@ export default function ProfilePinGate({ familyPin, member, onUnlock, onCancel }
 
   return (
     <PinPad
+      badge={<Avatar name={member} size="xl" />}
       title={member}
       subtitle={subtitle}
       pin={pin}

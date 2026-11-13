@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { MEMBERS } from "../lib/members";
-import { avatarColor } from "../lib/format";
+import Avatar from "./Avatar";
 import { hasUserPinHash } from "../lib/offline-store";
 
 // « Qui es-tu ? » — choix du profil, à la Netflix.
@@ -33,6 +33,7 @@ export default function ProfilePicker({ onChoose, online = true, enrolledMembers
     <main className="gate">
       <div className="profiles">
         <h1 className="profiles-title">Qui es-tu ?</h1>
+        <p className="gate-sub">Choisis ton profil pour ouvrir ta liste.</p>
 
         <div className="profile-grid">
           {MEMBERS.map((m) => {
@@ -54,9 +55,7 @@ export default function ProfilePicker({ onChoose, online = true, enrolledMembers
                 disabled={locked || Boolean(busyMember)}
                 title={locked ? "Indisponible hors ligne sur cet appareil" : undefined}
               >
-                <span className="profile-avatar" style={{ background: avatarColor(m) }}>
-                  {m[0]}
-                </span>
+                <Avatar name={m} size="xl" className="profile-avatar" />
                 <span className="profile-name">{busy ? "…" : m}</span>
               </button>
             );

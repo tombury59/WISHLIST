@@ -7,8 +7,9 @@ export default function OfflineBanner({ pending = 0 }) {
     <div className="offline-banner" role="status">
       <span className="offline-dot" aria-hidden="true" />
       <span>
-        Hors ligne — réactions et ordre synchronisés au retour
-        {pending > 0 ? ` · ${pending} en attente` : ""}.
+        <strong>Hors ligne.</strong> Tu peux encore réagir et classer ta liste —
+        ce sera envoyé au retour du réseau
+        {pending > 0 ? ` (${pending} en attente)` : ""}.
       </span>
     </div>
   );

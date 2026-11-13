@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import WishItem from "./WishItem";
+import Icon from "./Icon";
 
 // Carrousel (librairie Embla) : une carte devant, les voisines en retrait.
 export default function WishCarousel({ list, itemProps }) {
@@ -71,7 +72,7 @@ export default function WishCarousel({ list, itemProps }) {
         onClick={() => emblaApi && emblaApi.scrollPrev()}
         aria-label="Précédent"
       >
-        ‹
+        <Icon name="chevronLeft" size={18} />
       </button>
       <div className="embla" ref={emblaRef}>
         <div className="embla__container">
@@ -80,7 +81,7 @@ export default function WishCarousel({ list, itemProps }) {
               <WishItem
                 wish={w}
                 variant="card"
-                rank={i < 3 ? i + 1 : 0}
+                position={i + 1}
                 {...itemProps}
               />
             </div>
@@ -93,7 +94,7 @@ export default function WishCarousel({ list, itemProps }) {
         onClick={() => emblaApi && emblaApi.scrollNext()}
         aria-label="Suivant"
       >
-        ›
+        <Icon name="chevronRight" size={18} />
       </button>
     </div>
   );

@@ -45,3 +45,23 @@ export const COLOR_PALETTE = [
   "#ec4899", // rose
   "#78716c", // taupe
 ];
+
+// Nom de domaine lisible d'un lien (« amazon.fr »), ou "" si illisible.
+export function hostOf(link) {
+  try {
+    return new URL(normalizeUrl(link)).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+// Libellé de jour pour regrouper l'activité : « Aujourd'hui », « Hier », date.
+export function dayLabel(ts) {
+  const d = new Date(ts);
+  const today = new Date();
+  const startOf = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((startOf(today) - startOf(d)) / 86400000);
+  if (diff <= 0) return "Aujourd'hui";
+  if (diff === 1) return "Hier";
+  return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+}

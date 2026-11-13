@@ -8,8 +8,9 @@ export const REFRESH_COOLDOWN_MS = 8000;
 // démarre au 1er déplacement et l'envoi part au plus tard après ce délai.
 export const REORDER_BATCH_MS = 10000;
 
-// « Petit écran ? » — aligné sur le breakpoint CSS (820px).
-export const MOBILE_QUERY = "(max-width: 819px)";
+// « Écran étroit ? » — sous ce seuil, pas de panneau latéral de commentaires
+// (aligné sur le breakpoint CSS 1180px).
+export const MOBILE_QUERY = "(max-width: 1179px)";
 
 // Clés de stockage navigateur.
 export const STORAGE = {

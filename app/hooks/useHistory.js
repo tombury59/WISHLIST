@@ -1,29 +1,35 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { getHistory } from "../lib/wishes-api";
 
-// Modale « Historique » : ouverture + chargement à la demande des dernières
-// actions de la famille.
+// Activité de la famille (dernières actions), chargée À LA DEMANDE.
+//
+// Base limitée en requêtes : on ne recharge pas si les données ont moins d'une
+// minute (aller-retour entre rubriques = 0 requête). `load(true)` force.
+const FRESH_MS = 60000;
+
 export function useHistory(pin) {
-  const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const loadedAt = useRef(0);
 
-  async function openHistory() {
-    setOpen(true);
+  async function load(force = false) {
+    if (!force && loadedAt.current && Date.now() - loadedAt.current < FRESH_MS) return;
     setLoading(true);
     try {
       const data = await getHistory(pin);
       setItems(data.history || []);
+      loadedAt.current = Date.now();
     } catch {
-      setItems([]);
+      /* hors ligne : on garde ce qu'on a */
     } finally {
       setLoading(false);
     }
   }
 
-  function close() {
-    setOpen(false);
+  function reset() {
+    setItems([]);
+    loadedAt.current = 0;
   }
 
-  return { open, items, loading, openHistory, close };
+  return { items, loading, load, reset };
 }

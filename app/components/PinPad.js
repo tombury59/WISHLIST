@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Icon from "./Icon";
 
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
@@ -18,6 +19,7 @@ export default function PinPad({
   onBackspace,
   onSubmit,
   footer,
+  badge, // pastille au-dessus du titre (logo ou avatar du profil)
 }) {
   const submitEnabled = canSubmit ?? (!loading && pin.length > 0);
 
@@ -36,6 +38,7 @@ export default function PinPad({
   return (
     <main className="gate">
       <div className="gate-card">
+        {badge && <div className="gate-badge">{badge}</div>}
         <h1 className="gate-title">{title}</h1>
         {subtitle && <p className="gate-sub">{subtitle}</p>}
 
@@ -74,7 +77,7 @@ export default function PinPad({
             }}
             aria-label="Effacer"
           >
-            ⌫
+            <Icon name="backspace" size={22} />
           </button>
           <button
             type="button"
@@ -93,7 +96,7 @@ export default function PinPad({
             disabled={!submitEnabled}
             aria-label="Valider"
           >
-            {loading ? "…" : "→"}
+            {loading ? "…" : <Icon name="arrowRight" size={22} strokeWidth={2.2} />}
           </button>
         </div>
 

@@ -1,4 +1,16 @@
+import { Fraunces } from "next/font/google";
 import "./globals.css";
+
+// Police des titres. `next/font` la télécharge AU BUILD et la sert depuis le
+// même domaine que le site (CDN Vercel) : aucune requête vers Google à
+// l'exécution, pas de décalage de mise en page au chargement. Le texte courant
+// reste en police système (zéro octet à charger).
+const display = Fraunces({
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  display: "swap",
+  variable: "--font-display",
+});
 
 export const metadata = {
   title: "Liste de souhaits — Famille",
@@ -15,12 +27,15 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#0a0a0b",
+  // Le contenu passe sous l'encoche / la barre d'accueil ; les marges de
+  // sécurité sont gérées en CSS (env(safe-area-inset-*)).
+  viewportFit: "cover",
+  themeColor: "#0e0d0c",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="fr">
+    <html lang="fr" className={display.variable}>
       {/* Des extensions de navigateur (gestionnaires de mots de passe, etc.)
           ajoutent parfois des attributs au <body> avant l'hydratation React,
           ce qui déclenche un faux avertissement. On le supprime ici — ça ne

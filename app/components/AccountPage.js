@@ -2,14 +2,18 @@
 
 import { useState } from "react";
 import { avatarColor, COLOR_PALETTE } from "../lib/format";
+import Avatar from "./Avatar";
+import Icon from "./Icon";
 
 const MIN_LEN = 4;
 
-// Page « Mon compte ». S'ouvre par une révélation en cercle partant de l'icône
-// (en haut à gauche) et remplissant l'écran ; se referme en sens inverse.
+// Rubrique « Mon compte » : couleur, code, biométrie, données hors ligne,
+// changement de profil et déconnexion.
 export default function AccountPage({
   me,
   online = true,
+  wishCount = 0,
+  giftCount = 0,
   biometricAvailable,
   biometricEnrolled,
   onPickColor,
@@ -18,10 +22,7 @@ export default function AccountPage({
   onClearCache,
   onChangeProfile,
   onLogout,
-  onClose,
 }) {
-  const [closing, setClosing] = useState(false);
-
   // Couleur
   const [color, setColor] = useState(avatarColor(me));
   const [colorBusy, setColorBusy] = useState(false);
@@ -40,12 +41,6 @@ export default function AccountPage({
   const [cacheConfirm, setCacheConfirm] = useState(false);
   const [cacheBusy, setCacheBusy] = useState(false);
   const [cacheMsg, setCacheMsg] = useState("");
-
-  function close() {
-    if (closing) return;
-    setClosing(true);
-    setTimeout(onClose, 380); // laisse jouer l'animation de fermeture
-  }
 
   async function pickColor(c) {
     setColor(c);
@@ -115,126 +110,123 @@ export default function AccountPage({
   }
 
   return (
-    <div className={"account" + (closing ? " account--closing" : "")}>
-      <div className="account-inner">
-        <header className="account-head">
-          <div className="account-id">
-            <span className="account-avatar" style={{ background: color }}>
-              {me[0]}
-            </span>
-            <div>
-              <h1 className="account-name">{me}</h1>
-              <p className="account-sub">Mon compte</p>
-            </div>
-          </div>
-          <button className="account-close" onClick={close} aria-label="Fermer" title="Fermer">
-            ×
-          </button>
-        </header>
-
-        {/* Couleur */}
-        <section className="account-section">
-          <h2 className="account-section-title">Ma couleur</h2>
-          <div className="color-grid">
-            {COLOR_PALETTE.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={"color-dot" + (c === color ? " color-dot--on" : "")}
-                style={{ background: c }}
-                onClick={() => pickColor(c)}
-                disabled={!online || colorBusy}
-                aria-label={"Choisir " + c}
-              />
-            ))}
-          </div>
-          {!online && <p className="account-note">Modifiable seulement en ligne.</p>}
-        </section>
-
-        {/* Code */}
-        <section className="account-section">
-          <h2 className="account-section-title">Changer mon code</h2>
-          <form className="account-form" onSubmit={savePin}>
-            <input
-              className="field"
-              type="password"
-              inputMode="numeric"
-              autoComplete="new-password"
-              placeholder="Nouveau code"
-              value={newPin}
-              onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ""))}
-              maxLength={12}
-              disabled={!online || pinBusy}
-            />
-            <input
-              className="field"
-              type="password"
-              inputMode="numeric"
-              autoComplete="new-password"
-              placeholder="Confirmer le code"
-              value={confirmPin}
-              onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ""))}
-              maxLength={12}
-              disabled={!online || pinBusy}
-            />
-            <button
-              className="btn-primary"
-              disabled={!online || pinBusy || newPin.length < MIN_LEN}
-            >
-              {pinBusy ? "…" : "Enregistrer le code"}
-            </button>
-          </form>
-          {pinMsg && <p className="account-note">{pinMsg}</p>}
-          {!online && <p className="account-note">Modifiable seulement en ligne.</p>}
-        </section>
-
-        {/* Biométrie */}
-        {biometricAvailable && (
-          <section className="account-section">
-            <h2 className="account-section-title">Biométrie</h2>
-            <button className="account-btn" onClick={toggleBio} disabled={!online || bioBusy}>
-              {bioBusy
-                ? "…"
-                : biometricEnrolled
-                ? "🔒 Actualiser la biométrie"
-                : "🔒 Activer la biométrie"}
-            </button>
-            {bioMsg && <p className="account-note">{bioMsg}</p>}
-            {!online && <p className="account-note">Activation possible seulement en ligne.</p>}
-          </section>
-        )}
-
-        {/* Cache hors ligne */}
-        <section className="account-section">
-          <h2 className="account-section-title">Données hors ligne</h2>
-          <button className="account-btn" onClick={clearCache} disabled={cacheBusy}>
-            {cacheBusy
-              ? "…"
-              : cacheConfirm
-              ? "Confirmer — vider le cache ?"
-              : "Vider le cache local"}
-          </button>
-          <p className="account-note">
-            Efface les listes mises en cache et les modifs en attente sur cet
-            appareil. {online ? "Tout est rechargé depuis le serveur." : "À faire de préférence en ligne."}
+    <section className="page page-narrow">
+      <header className="account-hero">
+        <Avatar name={me} size="xl" color={color} />
+        <div>
+          <h1 className="page-title">{me}</h1>
+          <p className="page-sub">
+            {wishCount} souhait{wishCount > 1 ? "s" : ""} dans ta liste · {giftCount}{" "}
+            cadeau{giftCount > 1 ? "x" : ""} à offrir
           </p>
-          {cacheMsg && <p className="account-note">{cacheMsg}</p>}
-        </section>
+        </div>
+      </header>
 
-        {/* Profil / session */}
-        <section className="account-section">
-          <button className="account-btn" onClick={onChangeProfile}>
-            Changer de profil
-          </button>
-          <button
-            className="account-btn account-btn--danger"
-            onClick={onLogout}
-            style={{ marginTop: 10 }}
-          >
-            Se déconnecter
-          </button>
-        </section>
+      {/* Couleur */}
+      <div className="card account-card">
+        <h2 className="card-title">Ma couleur</h2>
+        <p className="card-text">Elle t'identifie partout : listes, commentaires, activité.</p>
+        <div className="color-grid">
+          {COLOR_PALETTE.map((c) => (
+            <button
+              key={c}
+              type="button"
+              className={"color-dot" + (c === color ? " is-on" : "")}
+              style={{ background: c }}
+              onClick={() => pickColor(c)}
+              disabled={!online || colorBusy}
+              aria-label={"Choisir la couleur " + c}
+              aria-pressed={c === color}
+            />
+          ))}
+        </div>
+        {!online && <p className="note">Modifiable seulement en ligne.</p>}
       </div>
-    </div>
+
+      {/* Code */}
+      <div className="card account-card">
+        <h2 className="card-title">Mon code</h2>
+        <p className="card-text">Le code qui protège ton profil (4 à 12 chiffres).</p>
+        <form className="account-form" onSubmit={savePin}>
+          <input
+            className="field"
+            type="password"
+            inputMode="numeric"
+            autoComplete="new-password"
+            placeholder="Nouveau code"
+            value={newPin}
+            onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ""))}
+            maxLength={12}
+            disabled={!online || pinBusy}
+          />
+          <input
+            className="field"
+            type="password"
+            inputMode="numeric"
+            autoComplete="new-password"
+            placeholder="Confirmer le code"
+            value={confirmPin}
+            onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ""))}
+            maxLength={12}
+            disabled={!online || pinBusy}
+          />
+          <button
+            className="btn btn-primary"
+            disabled={!online || pinBusy || newPin.length < MIN_LEN}
+          >
+            {pinBusy ? "…" : "Enregistrer le code"}
+          </button>
+        </form>
+        {pinMsg && <p className="note">{pinMsg}</p>}
+        {!online && <p className="note">Modifiable seulement en ligne.</p>}
+      </div>
+
+      {/* Biométrie */}
+      {biometricAvailable && (
+        <div className="card account-card">
+          <h2 className="card-title">Biométrie</h2>
+          <p className="card-text">
+            Ouvre ton profil avec l'empreinte ou le visage sur cet appareil, sans
+            taper ton code.
+          </p>
+          <button className="btn btn-soft btn-block" onClick={toggleBio} disabled={!online || bioBusy}>
+            <Icon name="lock" size={17} />
+            {bioBusy
+              ? "…"
+              : biometricEnrolled
+              ? "Actualiser la biométrie"
+              : "Activer la biométrie"}
+          </button>
+          {bioMsg && <p className="note">{bioMsg}</p>}
+          {!online && <p className="note">Activation possible seulement en ligne.</p>}
+        </div>
+      )}
+
+      {/* Cache hors ligne */}
+      <div className="card account-card">
+        <h2 className="card-title">Données hors ligne</h2>
+        <p className="card-text">
+          Efface les listes mises en cache et les modifications en attente sur cet
+          appareil.{" "}
+          {online ? "Tout est rechargé depuis le serveur." : "À faire de préférence en ligne."}
+        </p>
+        <button className="btn btn-soft btn-block" onClick={clearCache} disabled={cacheBusy}>
+          {cacheBusy ? "…" : cacheConfirm ? "Confirmer — vider le cache ?" : "Vider le cache local"}
+        </button>
+        {cacheMsg && <p className="note">{cacheMsg}</p>}
+      </div>
+
+      {/* Profil / session */}
+      <div className="account-actions">
+        <button className="btn btn-soft btn-block" onClick={onChangeProfile}>
+          <Icon name="user" size={17} />
+          Changer de profil
+        </button>
+        <button className="btn btn-danger-soft btn-block" onClick={onLogout}>
+          <Icon name="logout" size={17} />
+          Se déconnecter
+        </button>
+      </div>
+    </section>
   );
 }

@@ -16,9 +16,10 @@ export default function EditModal({ wish, onCancel, onSave }) {
 
   return (
     <div className="overlay" onClick={onCancel}>
-      <div className="edit-card" onClick={(e) => e.stopPropagation()}>
-        <form className="edit-form" onSubmit={submit}>
-          <h3 className="edit-title">Modifier</h3>
+      <form className="sheet dialog" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <h3 className="dialog-title">Modifier le souhait</h3>
+        <label className="add-field">
+          <span className="label">Nom</span>
           <input
             className="field"
             value={name}
@@ -27,23 +28,29 @@ export default function EditModal({ wish, onCancel, onSave }) {
             required
             autoFocus
           />
+        </label>
+        <label className="add-field">
+          <span className="label">Lien (facultatif)</span>
           <input
             className="field"
-            type="url"
+            type="text"
+            inputMode="url"
+            autoCapitalize="none"
+            autoCorrect="off"
             value={link}
             onChange={(e) => setLink(e.target.value)}
-            placeholder="Lien (facultatif)"
+            placeholder="https://…"
           />
-          <div className="confirm-actions">
-            <button type="button" className="btn-ghost" onClick={onCancel}>
-              Annuler
-            </button>
-            <button className="btn-primary" disabled={!name.trim()}>
-              Enregistrer
-            </button>
-          </div>
-        </form>
-      </div>
+        </label>
+        <div className="dialog-actions">
+          <button type="button" className="btn btn-quiet" onClick={onCancel}>
+            Annuler
+          </button>
+          <button className="btn btn-primary" disabled={!name.trim()}>
+            Enregistrer
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

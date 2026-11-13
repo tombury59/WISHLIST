@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { normalizeUrl } from "../lib/format";
+import Icon from "./Icon";
 
 // Miniature d'aperçu d'un lien : l'image si le lien pointe vers une image,
 // sinon l'icône (favicon) du site. Repli discret si rien ne charge.
@@ -31,7 +32,7 @@ export default function LinkThumb({ link, big }) {
         className={"thumb thumb-fallback" + bigCls}
         aria-label="Ouvrir le lien"
       >
-        ↗
+        <Icon name="external" size={big ? 30 : 18} />
       </a>
     );
   }
