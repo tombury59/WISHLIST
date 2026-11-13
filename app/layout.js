@@ -1,11 +1,12 @@
-import { Fraunces } from "next/font/google";
+import { Fredoka } from "next/font/google";
 import "./globals.css";
 
-// Police des titres. `next/font` la télécharge AU BUILD et la sert depuis le
+// Police des titres : Fredoka, ronde et douce comme Clovis. `next/font` la
+// télécharge AU BUILD et la sert depuis le
 // même domaine que le site (CDN Vercel) : aucune requête vers Google à
 // l'exécution, pas de décalage de mise en page au chargement. Le texte courant
 // reste en police système (zéro octet à charger).
-const display = Fraunces({
+const display = Fredoka({
   subsets: ["latin"],
   weight: ["500", "600"],
   display: "swap",
