@@ -40,7 +40,18 @@ export default function RootLayout({ children }) {
           ajoutent parfois des attributs au <body> avant l'hydratation React,
           ce qui déclenche un faux avertissement. On le supprime ici — ça ne
           masque QUE cet attribut sur le body, pas les vrais soucis ailleurs. */}
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        {/* Capture la proposition d'installation du navigateur (Chrome, Edge,
+            Android) dès qu'elle arrive, avant même que l'appli soit prête :
+            elle est reprise par useInstall pour le bouton « Installer ». */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__bip=e;window.dispatchEvent(new Event('bip-ready'));});",
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

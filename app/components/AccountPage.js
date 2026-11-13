@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { avatarColor, COLOR_PALETTE } from "../lib/format";
 import Avatar from "./Avatar";
 import Icon from "./Icon";
@@ -19,10 +19,21 @@ export default function AccountPage({
   onPickColor,
   onChangePin,
   onEnrollBiometric,
+  installed = false,
+  canInstall = false,
+  onInstall,
+  onOpenInstallGuide,
+  flashInstall = false, // arrivée depuis la bulle « Psssttt » : la carte clignote
   onClearCache,
   onChangeProfile,
   onLogout,
 }) {
+  // Arrivée depuis la bulle « Psssttt » : on amène la carte d'installation à l'écran.
+  const installRef = useRef(null);
+  useEffect(() => {
+    if (flashInstall) installRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [flashInstall]);
+
   // Couleur
   const [color, setColor] = useState(avatarColor(me));
   const [colorBusy, setColorBusy] = useState(false);
@@ -214,6 +225,39 @@ export default function AccountPage({
           {cacheBusy ? "…" : cacheConfirm ? "Confirmer — vider le cache ?" : "Vider le cache local"}
         </button>
         {cacheMsg && <p className="note">{cacheMsg}</p>}
+      </div>
+
+      {/* Installation de l'appli sur cet appareil */}
+      <div
+        id="installer"
+        className={"card account-card" + (flashInstall ? " is-flash" : "")}
+        ref={installRef}
+      >
+        <h2 className="card-title">Appli sur cet appareil</h2>
+        {installed ? (
+          <p className="card-text">
+            <Icon name="check" size={15} strokeWidth={2.4} className="inline-icon" /> Souhaits est
+            installée sur cet appareil.
+          </p>
+        ) : (
+          <>
+            <p className="card-text">
+              Installe Souhaits pour l'ouvrir d'un geste depuis ton écran d'accueil, en plein
+              écran, comme une vraie appli.
+            </p>
+            <div className="account-row">
+              {canInstall && (
+                <button className="btn btn-primary" onClick={onInstall}>
+                  <Icon name="install" size={17} />
+                  Installer
+                </button>
+              )}
+              <button className="btn btn-soft" onClick={onOpenInstallGuide}>
+                Voir comment faire
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Profil / session */}

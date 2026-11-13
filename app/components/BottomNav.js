@@ -2,10 +2,15 @@ import Avatar from "./Avatar";
 import Icon from "./Icon";
 
 // Barre de navigation du bas (téléphone) : 4 rubriques accessibles au pouce.
-export default function BottomNav({ me, section, giftCount, onGo }) {
+// `nudge` : l'onglet Compte pulse pendant que la bulle d'installation est affichée.
+export default function BottomNav({ me, section, giftCount, onGo, nudge = false }) {
   const item = (key, label, icon) => (
     <button
-      className={"tabbar-item" + (section === key ? " is-active" : "")}
+      className={
+        "tabbar-item" +
+        (section === key ? " is-active" : "") +
+        (nudge && key === "account" ? " is-nudged" : "")
+      }
       onClick={() => onGo(key)}
       aria-current={section === key ? "page" : undefined}
     >

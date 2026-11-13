@@ -11,6 +11,7 @@ import { useIsMobile } from "./hooks/useIsMobile";
 import { useBiometric } from "./hooks/useBiometric";
 import { useOnline } from "./hooks/useOnline";
 import { useSection } from "./hooks/useSection";
+import { useInstall } from "./hooks/useInstall";
 import Gate from "./components/Gate";
 import ProfilePicker from "./components/ProfilePicker";
 import ProfilePinGate from "./components/ProfilePinGate";
@@ -32,6 +33,10 @@ import ConfirmModal from "./components/ConfirmModal";
 import EditModal from "./components/EditModal";
 import OfflineBanner from "./components/OfflineBanner";
 import AccountPage from "./components/AccountPage";
+import InstallGuide from "./components/InstallGuide";
+import InstallNudge from "./components/InstallNudge";
+import { isTouchPlatform } from "./lib/install";
+import { STORAGE } from "./lib/constants";
 import * as profileApi from "./lib/profile-api";
 import { updateUserPin } from "./lib/pins-api";
 import { setColorOverrides } from "./lib/format";
@@ -52,6 +57,39 @@ export default function Home() {
   const biometric = useBiometric();
   const online = useOnline();
   const { section, go } = useSection();
+  const install = useInstall();
+
+  // Guide d'installation (fenêtre) + bandeau d'invitation masquable.
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [hintHidden, setHintHidden] = useState(true); // true tant qu'on n'a pas lu le réglage
+  useEffect(() => {
+    try {
+      setHintHidden(localStorage.getItem(STORAGE.installHint) === "1");
+    } catch {
+      setHintHidden(false);
+    }
+  }, []);
+  function hideHint() {
+    setHintHidden(true);
+    try {
+      localStorage.setItem(STORAGE.installHint, "1");
+    } catch {
+      /* stockage indisponible : masqué pour cette visite seulement */
+    }
+  }
+  // La bulle « Psssttt » mène au compte, où la carte d'installation clignote.
+  const [flashInstall, setFlashInstall] = useState(false);
+  function followNudge() {
+    hideHint();
+    go("account");
+    setFlashInstall(true);
+    setTimeout(() => setFlashInstall(false), 2600);
+  }
+
+  async function installNow() {
+    const ok = await install.promptInstall();
+    if (ok) setGuideOpen(false);
+  }
 
   // Profil sélectionné dans le choix des profils, en attente de son code PIN.
   const [pendingProfile, setPendingProfile] = useState(null);
@@ -487,6 +525,11 @@ export default function Home() {
               await offline.setUserPinHash(me, code);
             }}
             onEnrollBiometric={() => biometric.enroll(pin, me)}
+            installed={install.installed}
+            canInstall={install.canPrompt}
+            onInstall={installNow}
+            onOpenInstallGuide={() => setGuideOpen(true)}
+            flashInstall={flashInstall}
             onClearCache={() => wishesApi.clearOfflineData()}
             onChangeProfile={() => {
               setOpenComments(null);
@@ -498,7 +541,25 @@ export default function Home() {
         )}
       </main>
 
-      <BottomNav me={me} section={section} giftCount={giftCount} onGo={go} />
+      {/* Téléphone, appli pas encore installée : bulle « Psssttt » au-dessus
+          de l'onglet Compte (une seule fois, jusqu'à ce qu'elle soit fermée). */}
+      {install.platform &&
+        !install.installed &&
+        !hintHidden &&
+        section !== "account" &&
+        isTouchPlatform(install.platform) && (
+          <InstallNudge onGo={followNudge} onDismiss={hideHint} />
+        )}
+
+      <BottomNav
+        me={me}
+        section={section}
+        giftCount={giftCount}
+        onGo={go}
+        nudge={Boolean(
+          install.platform && !install.installed && !hintHidden && isTouchPlatform(install.platform)
+        )}
+      />
 
       {/* Écran étroit + vue liste : commentaires dans une modale. */}
       {section === "lists" && commentWish && commentsInModal && (
@@ -507,6 +568,15 @@ export default function Home() {
             <CommentsPanel key={commentWish.id} variant="modal" {...commentsProps} />
           </div>
         </div>
+      )}
+
+      {guideOpen && (
+        <InstallGuide
+          platform={install.platform}
+          canPrompt={install.canPrompt}
+          onPrompt={installNow}
+          onClose={() => setGuideOpen(false)}
+        />
       )}
 
       {confirmData && (

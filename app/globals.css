@@ -2418,3 +2418,1001 @@ button.reserve {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   14. INSTALLATION DE L'APPLI (bandeau, carte du compte, guide animé)
+   ========================================================================== */
+.account-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.inline-icon {
+  display: inline-block;
+  vertical-align: -2px;
+  color: var(--ok);
+}
+
+/* ---------- Fenêtre du guide ---------- */
+.ig-guide {
+  gap: 14px;
+  padding: 18px 18px calc(18px + var(--safe-bottom));
+  overflow-y: auto;
+}
+
+.ig-guide-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ig-guide-platform {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.ig-oneclick {
+  min-height: 48px;
+}
+
+.ig-stage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  padding: 14px 0 6px;
+  border-radius: var(--radius);
+  background: radial-gradient(ellipse 70% 60% at 50% 45%, rgba(255, 125, 104, 0.1), transparent 70%),
+    var(--surface-2);
+  animation: fade-in 0.25s ease;
+}
+
+.ig-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 46px;
+}
+
+.ig-step-n {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.ig-step-text {
+  font-size: 15.5px;
+  line-height: 1.4;
+}
+
+.ig-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ig-dots-nav {
+  display: flex;
+  gap: 6px;
+}
+
+.ig-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--border-strong);
+  overflow: hidden;
+  cursor: pointer;
+  transition: width 0.25s ease, background 0.2s;
+}
+
+.ig-dot.is-on {
+  width: 28px;
+  background: var(--accent-line);
+}
+
+/* Remplissage de l'étape en cours pendant la lecture automatique */
+.ig-dot-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform-origin: left;
+  animation: ig-fill linear forwards;
+}
+
+@keyframes ig-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.ig-note {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.ig-unsupported {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 8px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14.5px;
+}
+
+.ig-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  color: var(--faint);
+  font-size: 13px;
+}
+
+.ig-switch select {
+  min-width: 0;
+  max-width: 60%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 13.5px;
+}
+
+/* ---------- Appareils stylisés ---------- */
+.ig-device {
+  position: relative;
+  flex: none;
+  user-select: none;
+  pointer-events: none;
+  font-family: var(--font-body);
+}
+
+.ig-phone {
+  width: 152px;
+  height: 288px;
+  padding: 5px;
+  border-radius: 28px;
+  background: #34312e;
+  box-shadow: 0 0 0 1px #4a4743, 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+.ig-screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  border-radius: 23px;
+  background: #121110;
+  overflow: hidden;
+}
+
+.ig-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 14px 3px;
+  color: #e9e5df;
+  font-size: 8.5px;
+  font-weight: 700;
+}
+
+.ig-status-icons {
+  width: 22px;
+  height: 6px;
+  border-radius: 2px;
+  background: #e9e5df;
+  opacity: 0.8;
+}
+
+/* Barres de navigateur */
+.ig-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: #24221f;
+  color: #cfc9c0;
+}
+
+.ig-bar-top {
+  border-bottom: 1px solid #2f2c29;
+}
+
+.ig-bottom {
+  margin-top: auto;
+  background: #24221f;
+  border-top: 1px solid #2f2c29;
+  padding-top: 5px;
+}
+
+.ig-bottom .ig-url {
+  margin: 0 8px;
+}
+
+.ig-bar-bottom {
+  justify-content: space-around;
+  padding: 4px 4px 9px;
+  background: transparent;
+}
+
+.ig-url {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 4px 0 8px;
+  border-radius: 7px;
+  background: #34312d;
+  color: #bdb6ac;
+  font-size: 7.5px;
+}
+
+.ig-url-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.ig-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
+}
+
+.ig-btn-in {
+  width: 16px;
+  height: 16px;
+}
+
+/* Élément à toucher : couleur d'accent + anneau qui pulse */
+.ig-hit {
+  position: relative;
+  color: var(--accent) !important;
+  z-index: 2;
+}
+
+.ig-btn.ig-hit {
+  background: rgba(255, 125, 104, 0.18);
+}
+
+.ig-hit::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 2px solid var(--accent);
+  animation: ig-pulse 1.6s ease-out infinite;
+}
+
+@keyframes ig-pulse {
+  0% { transform: scale(0.85); opacity: 0.9; }
+  70%, 100% { transform: scale(1.45); opacity: 0; }
+}
+
+/* Doigt qui vient appuyer */
+.ig-finger {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25), 0 3px 8px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  animation: ig-tap 1.6s ease-in-out infinite;
+}
+
+@keyframes ig-tap {
+  0% { transform: translate(18px, 22px) scale(1); opacity: 0; }
+  25% { transform: translate(4px, 6px) scale(1); opacity: 0.95; }
+  42% { transform: translate(0, 0) scale(0.72); opacity: 0.95; }
+  55% { transform: translate(0, 0) scale(0.95); opacity: 0.9; }
+  85%, 100% { transform: translate(0, 0) scale(1); opacity: 0; }
+}
+
+/* Page factice */
+.ig-page {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+  overflow: hidden;
+}
+
+.ig-page-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 2px;
+}
+
+.ig-card {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px;
+  border-radius: 6px;
+  background: #1d1c1a;
+  border: 1px solid #2a2826;
+}
+
+.ig-thumb {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: #2f2c29;
+}
+
+.ig-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ig-line {
+  height: 4px;
+  border-radius: 2px;
+  background: #3a3733;
+}
+
+.ig-line-short {
+  width: 55%;
+  background: #2f2c29;
+}
+
+.ig-line-title {
+  width: 50%;
+  height: 6px;
+  background: #4a4641;
+}
+
+/* Icône de l'appli */
+.ig-app {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.ig-app-sm { width: 14px; height: 14px; border-radius: 4px; }
+.ig-app-md { width: 22px; height: 22px; border-radius: 6px; }
+.ig-app-lg { width: 32px; height: 32px; border-radius: 9px; }
+
+/* Calques qui apparaissent */
+.ig-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: rgba(0, 0, 0, 0.45);
+  animation: fade-in 0.25s ease;
+}
+
+.ig-layer-clear {
+  justify-content: flex-start;
+  background: transparent;
+}
+
+.ig-layer-center {
+  justify-content: center;
+  align-items: center;
+}
+
+.ig-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 6px 12px;
+  border-radius: 13px 13px 0 0;
+  background: #2b2926;
+  animation: ig-sheet-up 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes ig-sheet-up {
+  from { transform: translateY(100%); }
+}
+
+.ig-grabber {
+  align-self: center;
+  width: 22px;
+  height: 3px;
+  margin-bottom: 4px;
+  border-radius: 2px;
+  background: #57534d;
+}
+
+.ig-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 19px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  color: #d9d3ca;
+  font-size: 8px;
+  background: #34312d;
+}
+
+.ig-row-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ig-row-hit {
+  color: var(--text);
+  font-weight: 700;
+  background: rgba(255, 125, 104, 0.22);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.ig-row-ico {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+.ig-row-hit .ig-finger {
+  left: 70%;
+}
+
+.ig-menu {
+  align-self: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 124px;
+  margin: 36px 5px 0 0;
+  padding: 4px;
+  border-radius: 9px;
+  background: #2b2926;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  transform-origin: top right;
+  animation: ig-pop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ig-menu .ig-row,
+.ig-macmenu .ig-row {
+  background: transparent;
+}
+
+.ig-menu .ig-row-hit,
+.ig-macmenu .ig-row-hit {
+  background: rgba(255, 125, 104, 0.22);
+}
+
+@keyframes ig-pop {
+  from { transform: scale(0.85); opacity: 0; }
+}
+
+/* Fenêtres de confirmation */
+.ig-dialog {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 124px;
+  margin-bottom: 70px;
+  padding: 12px 10px 9px;
+  border-radius: 12px;
+  background: #2b2926;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
+  animation: ig-pop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ig-layer-center .ig-dialog {
+  margin: 0;
+}
+
+.ig-dialog-ios {
+  align-self: stretch;
+  width: auto;
+  margin: 0;
+  padding: 8px 9px 16px;
+  border-radius: 13px 13px 0 0;
+  animation: ig-sheet-up 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ig-dlg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 8.5px;
+}
+
+.ig-dlg-cancel {
+  color: #a8a199;
+  font-size: 8.5px;
+}
+
+.ig-dlg-action {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 800;
+}
+
+.ig-dlg-app {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ig-dlg-name,
+.ig-dlg-title {
+  color: var(--text);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.ig-dlg-buttons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.ig-dlg-primary {
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(255, 125, 104, 0.2);
+  font-size: 8.5px;
+  font-weight: 800;
+}
+
+/* Écran d'accueil */
+.ig-home {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 26px 10px 8px;
+  background: linear-gradient(160deg, #3b2b45, #1d2a3f 55%, #13202b);
+}
+
+.ig-home-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 6px;
+  justify-items: center;
+}
+
+.ig-home-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.ig-home-icon {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: hsl(var(--h, 200) 35% 42%);
+  opacity: 0.85;
+}
+
+.ig-home-new .ig-app {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  animation: ig-icon-in 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) 0.35s both;
+}
+
+.ig-home-new::after {
+  content: "";
+  position: absolute;
+  top: -4px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  animation: ig-pulse 1.6s ease-out 1s infinite;
+}
+
+@keyframes ig-icon-in {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.ig-home-label {
+  color: #fff;
+  font-size: 6.5px;
+  font-weight: 600;
+  animation: fade-in 0.4s ease 0.7s both;
+}
+
+.ig-home-dock {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-top: auto;
+  padding: 7px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* Ordinateur */
+.ig-desktop {
+  width: 268px;
+  height: 196px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #2b3446, #1a2130);
+  box-shadow: 0 0 0 1px #3b4252, 0 18px 40px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.ig-macbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 15px;
+  padding: 0 8px;
+  background: rgba(30, 30, 34, 0.85);
+  color: #e6e1da;
+  font-size: 7.5px;
+}
+
+.ig-mac-apple {
+  width: 6px;
+  height: 7px;
+  border-radius: 2px 2px 3px 3px;
+  background: #e6e1da;
+}
+
+.ig-mac-item {
+  position: relative;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.ig-mac-open {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.ig-macmenu {
+  position: absolute;
+  top: 15px;
+  left: 50px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 112px;
+  padding: 3px;
+  border-radius: 6px;
+  background: #2b2926;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  transform-origin: top left;
+  animation: ig-pop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ig-window {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin: 10px 12px 12px;
+  border-radius: 7px;
+  background: #121110;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.ig-window-app {
+  margin-bottom: 30px;
+  animation: ig-pop 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.ig-dots {
+  flex: none;
+  width: 22px;
+  height: 6px;
+  background: radial-gradient(circle at 3px 3px, #ff5f57 2.5px, transparent 3px),
+    radial-gradient(circle at 11px 3px, #febc2e 2.5px, transparent 3px),
+    radial-gradient(circle at 19px 3px, #28c840 2.5px, transparent 3px);
+}
+
+.ig-win-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 7px;
+  background: #24221f;
+  border-bottom: 1px solid #2f2c29;
+  color: #e6e1da;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.ig-desktop .ig-page {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.ig-desktop .ig-page-head {
+  grid-column: 1 / -1;
+}
+
+.ig-dock {
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateX(-50%);
+}
+
+.ig-dock .ig-home-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+}
+
+.ig-dock-new .ig-app {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  animation: ig-icon-in 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) 0.35s both;
+}
+
+@media (min-width: 600px) {
+  .ig-guide {
+    max-width: 460px;
+  }
+
+  .ig-stage {
+    min-height: 320px;
+  }
+
+  /* L'écran d'ordinateur est dessiné petit : on l'agrandit quand il y a la place. */
+  .ig-stage .ig-desktop {
+    transform: scale(1.4);
+  }
+}
+
+/* Moins d'animations demandées : on garde les repères, sans le doigt */
+@media (prefers-reduced-motion: reduce) {
+  .ig-finger {
+    display: none;
+  }
+}
+
+/* iOS 26 : barre « compacte » flottante (verre dépoli) */
+.ig-glass-bar {
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: 10px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ig-glass {
+  background: rgba(70, 66, 61, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #e6e1da;
+}
+
+.ig-btn.ig-glass {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.ig-glass-url {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+  padding: 0 7px 0 3px;
+  border-radius: 999px;
+  font-size: 7.5px;
+  color: #d4cdc3;
+}
+
+/* Menu du bouton « ⋯ », ouvert au-dessus de la barre */
+.ig-layer-bottom {
+  justify-content: flex-end;
+}
+
+/* Le menu de la page s'ouvre au-dessus de la barre, côté gauche. */
+.ig-popup {
+  align-self: flex-start;
+  margin: 0 0 40px 7px;
+  transform-origin: bottom left;
+}
+
+.ig-glass-dim {
+  opacity: 0.55;
+}
+
+/* Interrupteur « Ouvrir comme app web » (activé) */
+.ig-dlg-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 7px;
+  border-radius: 7px;
+  background: #34312d;
+  color: #d9d3ca;
+  font-size: 7.5px;
+}
+
+.ig-switch-on {
+  position: relative;
+  flex: none;
+  width: 20px;
+  height: 12px;
+  border-radius: 999px;
+  background: #34c759;
+}
+
+.ig-switch-on::after {
+  content: "";
+  position: absolute;
+  top: 1.5px;
+  right: 1.5px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+/* Bulle « Psssttt » (téléphone) : surgit en bas à droite, sa pointe dirigée
+   vers l'onglet Compte (4e colonne de la barre du bas, centrée à 87,5 %). */
+.nudge {
+  position: fixed;
+  right: 10px;
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 12px);
+  z-index: 40;
+  width: min(300px, calc(100vw - 20px));
+  padding: 14px 14px 12px;
+  border: 1px solid var(--accent-line);
+  border-radius: 18px 18px 6px 18px;
+  background: var(--surface-3);
+  box-shadow: var(--shadow), 0 0 0 4px rgba(255, 125, 104, 0.08);
+  transform-origin: calc(100% - (12.5vw - 10px)) calc(100% + 12px);
+  animation: nudge-in 0.55s cubic-bezier(0.25, 1.4, 0.45, 1) both;
+}
+
+/* La pointe, au-dessus de l'icône Compte */
+.nudge::after {
+  content: "";
+  position: absolute;
+  right: calc(12.5vw - 10px - 8px);
+  bottom: -8px;
+  width: 16px;
+  height: 16px;
+  background: var(--surface-3);
+  border-right: 1px solid var(--accent-line);
+  border-bottom: 1px solid var(--accent-line);
+  transform: rotate(45deg);
+}
+
+.nudge.is-leaving {
+  animation: nudge-out 0.22s ease-in forwards;
+}
+
+@keyframes nudge-in {
+  0% { transform: translate(18px, 34px) scale(0.2); opacity: 0; }
+  60% { opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+
+@keyframes nudge-out {
+  to { transform: translate(14px, 26px) scale(0.3); opacity: 0; }
+}
+
+.nudge-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+.nudge-text {
+  padding-right: 22px;
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+.nudge-text strong {
+  color: var(--accent);
+}
+
+.nudge-go {
+  margin-top: 10px;
+  margin-left: auto;
+  display: flex;
+}
+
+/* L'onglet Compte pulse tant que la bulle est là */
+.tabbar-item.is-nudged .tabbar-icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: ig-pulse 1.6s ease-out infinite;
+}
+
+/* Carte d'installation mise en évidence à l'arrivée depuis la bulle */
+.account-card.is-flash {
+  animation: card-flash 1.3s ease 2;
+}
+
+@keyframes card-flash {
+  0%, 100% { border-color: var(--border); box-shadow: none; }
+  40% { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+}
+
+/* La bulle et la pulsation n'existent que sur téléphone (barre du bas) */
+@media (min-width: 900px) {
+  .nudge {
+    display: none;
+  }
+}
