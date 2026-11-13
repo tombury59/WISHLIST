@@ -1,5 +1,5 @@
 import PinPad from "./PinPad";
-import Icon from "./Icon";
+import ClovisArt from "./ClovisArt";
 
 // Écran du code famille (entrée dans l'appli). L'état et la logique de
 // connexion vivent dans useAuth ; l'affichage est délégué au PinPad partagé.
@@ -7,9 +7,13 @@ export default function Gate({ pin, error, loading, onDigit, onBackspace, onSubm
   return (
     <PinPad
       badge={
-        <span className="brand-mark brand-mark-lg">
-          <Icon name="gift" size={28} />
-        </span>
+        // Clovis accueille ; code faux : il est déçu et secoue la tête.
+        <ClovisArt
+          key={error || "ok"}
+          pose={error ? "decu" : "coucou"}
+          width={error ? 104 : 112}
+          className={error ? "is-shaking" : ""}
+        />
       }
       title="Liste de souhaits"
       subtitle="Entre le code de la famille"

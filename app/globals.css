@@ -3565,3 +3565,235 @@ button.reserve {
     transition: none;
   }
 }
+
+/* ------------------------------------------------------------------
+   16. Clovis, la mascotte (furet) au bord des bulles
+   ------------------------------------------------------------------ */
+.clovis {
+  position: absolute;
+  z-index: 2;
+  line-height: 0;
+  pointer-events: none;
+}
+
+.clovis-inner,
+.clovis-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.clovis-img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Tailles : la tête de Clovis garde à peu près la même taille d'une pose à l'autre */
+.clovis-peek { width: 72px; overflow: hidden; }
+.clovis-wave { width: 84px; }
+.clovis-dance { width: 100px; }
+.nudge .clovis-peek { width: 64px; }
+
+/* Au-dessus de la bulle. « peek » : le bas plat de la tête sur le bord, les
+   pattes qui retombent sur la bulle. */
+.clovis-top-left,
+.clovis-top-right { bottom: calc(100% - 3px); }
+.clovis-peek.clovis-top-left,
+.clovis-peek.clovis-top-right { bottom: calc(100% - 9px); }
+.nudge .clovis-peek.clovis-top-left,
+.nudge .clovis-peek.clovis-top-right { bottom: calc(100% - 8px); }
+.clovis-dance.clovis-top-left,
+.clovis-dance.clovis-top-right { bottom: calc(100% - 6px); }
+/* Au-dessous : suspendu la tête en bas */
+.clovis-bottom-left,
+.clovis-bottom-right { top: calc(100% - 9px); transform: rotate(180deg); }
+.clovis-top-left,
+.clovis-bottom-left { left: 14px; }
+.clovis-top-right,
+.clovis-bottom-right { right: 14px; }
+
+/* Il sort de derrière la bulle */
+.clovis-peek .clovis-inner {
+  animation: cl-peek 0.6s 0.25s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+}
+@keyframes cl-peek {
+  0% { transform: translateY(100%); }
+  100% { transform: none; }
+}
+
+/* Il arrive d'un bond, puis se balance en saluant */
+.clovis-wave .clovis-inner {
+  transform-origin: 50% 100%;
+  animation: cl-hop-in 0.55s 0.2s cubic-bezier(0.3, 1.4, 0.5, 1) both,
+    cl-sway 1.6s 0.8s ease-in-out infinite alternate;
+}
+@keyframes cl-hop-in {
+  0% { transform: translateY(24px) scale(0.4); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes cl-sway {
+  from { transform: rotate(-3deg); }
+  to { transform: rotate(3deg); }
+}
+
+/* La « danse de guerre » : bonds désordonnés en zigzag */
+.clovis-dance .clovis-inner {
+  transform-origin: 50% 100%;
+  animation: cl-dance 1.1s ease-in-out infinite;
+}
+@keyframes cl-dance {
+  0%, 100% { transform: none; }
+  15% { transform: translate(-6px, -12px) rotate(-8deg); }
+  30% { transform: translate(-8px, 0) rotate(-3deg) scale(1.04, 0.95); }
+  45% { transform: translate(2px, -14px) rotate(7deg); }
+  60% { transform: translate(8px, 0) rotate(3deg) scale(1.04, 0.95); }
+  75% { transform: translate(4px, -9px) rotate(-6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clovis .clovis-inner {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   17. Clovis dans les pages (états vides, chargement, accueil, fêtes)
+   ------------------------------------------------------------------ */
+.clovis-art {
+  display: inline-block;
+  flex: none;
+  line-height: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.clovis-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform-origin: 50% 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+  animation: cl-art-in 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+
+@keyframes cl-art-in {
+  0% { transform: translateY(10px) scale(0.85); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+
+/* Une petite vie propre à chaque pose */
+.clovis-art-sieste img { animation: cl-art-in 0.45s both, cl-breathe 3.2s 0.5s ease-in-out infinite; }
+.clovis-art-fouille img { animation: cl-art-in 0.45s both, cl-rummage 0.7s 0.5s ease-in-out infinite; }
+.clovis-art-decu img { animation: cl-art-in 0.45s both, cl-sigh 2.8s 0.5s ease-in-out infinite; }
+.clovis-art-pointeur img { animation: cl-art-in 0.45s both, cl-point 1.3s 0.5s ease-in-out infinite; }
+.clovis-art-coucou img,
+.clovis-art-trouve img { animation: cl-art-in 0.45s both, cl-sway 1.6s 0.5s ease-in-out infinite alternate; }
+.clovis-art-bord img { animation: cl-art-in 0.45s both, cl-bob 2.4s 0.5s ease-in-out infinite; }
+.clovis-art-bond img,
+.clovis-art.is-dancing img { animation: cl-dance 1.1s ease-in-out infinite; }
+
+@keyframes cl-breathe {
+  0%, 100% { transform: none; }
+  50% { transform: scale(1.02, 1.045); }
+}
+@keyframes cl-rummage {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+@keyframes cl-sigh {
+  0%, 100% { transform: none; }
+  50% { transform: translateY(2px) rotate(-1.5deg); }
+}
+@keyframes cl-point {
+  0%, 100% { transform: none; }
+  50% { transform: translateX(4px); }
+}
+@keyframes cl-bob {
+  0%, 100% { transform: none; }
+  50% { transform: translateY(-2px); }
+}
+
+/* Code faux : il secoue la tête */
+.clovis-art.is-shaking img {
+  animation: cl-art-in 0.3s both, cl-shake 0.5s 0.15s ease-in-out;
+}
+@keyframes cl-shake {
+  0%, 100% { transform: none; }
+  20% { transform: translateX(-6px) rotate(-4deg); }
+  40% { transform: translateX(5px) rotate(3deg); }
+  60% { transform: translateX(-4px) rotate(-2deg); }
+  80% { transform: translateX(3px); }
+}
+
+/* Emplacements */
+.empty-art { margin-bottom: 8px; }
+.empty-loading { border-color: transparent; }
+.offline-art { margin: -4px 0 -6px; }
+.hint-art { margin: -6px 0; }
+
+.profiles-mascot {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+/* Le rebord sur lequel il pose les pattes */
+.profiles-mascot .clovis-art { position: relative; }
+.profiles-mascot .clovis-art::before {
+  content: "";
+  position: absolute;
+  left: -22px;
+  right: -22px;
+  bottom: 16%;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--border-strong);
+}
+
+/* Bulle de célébration */
+.cheer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 14px);
+  z-index: 45;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  width: fit-content;
+  max-width: min(380px, calc(100vw - 24px));
+  margin: 0 auto;
+  padding: 10px 16px 12px 10px;
+  border: 1px solid var(--accent-line);
+  border-radius: 18px;
+  background: var(--surface-3);
+  box-shadow: var(--shadow), 0 0 0 4px rgba(255, 125, 104, 0.08);
+  animation: cheer-in 0.5s cubic-bezier(0.25, 1.4, 0.45, 1) both;
+}
+.cheer.is-leaving { animation: cheer-out 0.25s ease-in forwards; }
+.cheer-art { margin-top: -34px; }
+.cheer-text {
+  font-size: 14.5px;
+  line-height: 1.4;
+}
+@keyframes cheer-in {
+  0% { transform: translateY(30px) scale(0.6); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes cheer-out {
+  to { transform: translateY(20px) scale(0.8); opacity: 0; }
+}
+@media (min-width: 900px) {
+  .cheer { bottom: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clovis-art img,
+  .clovis-art.is-dancing img,
+  .clovis-art.is-shaking img,
+  .cheer,
+  .cheer.is-leaving {
+    animation: none;
+  }
+}

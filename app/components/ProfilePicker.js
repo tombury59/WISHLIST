@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { MEMBERS } from "../lib/members";
 import Avatar from "./Avatar";
 import { hasUserPinHash } from "../lib/offline-store";
+import ClovisArt from "./ClovisArt";
 
 // « Qui es-tu ? » — choix du profil, à la Netflix.
 // Au clic sur un profil, le parent tente d'abord la biométrie (si ce profil est
@@ -32,6 +33,9 @@ export default function ProfilePicker({ onChoose, online = true, enrolledMembers
   return (
     <main className="gate">
       <div className="profiles">
+        <div className="profiles-mascot">
+          <ClovisArt pose="bord" width={128} />
+        </div>
         <h1 className="profiles-title">Qui es-tu ?</h1>
         <p className="gate-sub">Choisis ton profil pour ouvrir ta liste.</p>
 

@@ -44,16 +44,19 @@ export function useReservations(pin, me, enabled) {
   }
 
   // Réserve (affichage immédiat). Si quelqu'un a été plus rapide (409) ou en
-  // cas d'erreur, on recharge pour afficher l'état réel.
+  // cas d'erreur, on recharge pour afficher l'état réel. Renvoie true si la
+  // réservation est bien enregistrée.
   async function reserve(member, wishId) {
     const by = meRef.current;
-    if (!by || by === member) return;
+    if (!by || by === member) return false;
     setOne(member, wishId, { by, at: Date.now() });
     try {
       await api.reserveWish(pinRef.current, { member, wishId, by });
+      return true;
     } catch {
       setOne(member, wishId, null);
       await reload();
+      return false;
     }
   }
 

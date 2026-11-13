@@ -4,6 +4,7 @@ import { normalizeUrl, hostOf } from "../lib/format";
 import Avatar from "./Avatar";
 import Icon from "./Icon";
 import LinkThumb from "./LinkThumb";
+import ClovisArt from "./ClovisArt";
 
 // Miniature d'un cadeau (aperçu du lien, sinon icône).
 function Thumb({ wish }) {
@@ -37,12 +38,10 @@ function Body({ wish, meta }) {
   );
 }
 
-function EmptyState({ title, text }) {
+function EmptyState({ title, text, pose = "sieste" }) {
   return (
     <div className="empty-state">
-      <span className="empty-icon">
-        <Icon name="gift" size={30} />
-      </span>
+      <ClovisArt pose={pose} width={pose === "sieste" ? 130 : 120} className="empty-art" />
       <p className="empty-title">{title}</p>
       <p className="empty-text">{text}</p>
     </div>
@@ -109,6 +108,7 @@ export default function GiftsPage({
       {tab === "give" &&
         (toGive === 0 ? (
           <EmptyState
+            pose="fouille"
             title="Rien de réservé pour l'instant"
             text="Ouvre la liste de quelqu'un et touche « Réserver » sur le cadeau que tu comptes offrir. Les autres verront qu'il est pris — pas la personne à qui il est destiné."
           />

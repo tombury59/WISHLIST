@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Icon from "./Icon";
+import Clovis, { CLOVIS_ROOM } from "./Clovis";
 
 // Petit tutoriel de première visite, façon jeu vidéo : l'écran s'assombrit, un
 // projecteur entoure l'élément présenté et une bulle (la même que « Psssttt »)
@@ -32,6 +33,7 @@ export default function Tour({ steps, onStep, onClose }) {
   const bubbleRef = useRef(null);
   const step = steps[i];
   const last = i === steps.length - 1;
+  const pose = step.mascot || "peek"; // Clovis, la mascotte, au bord de la bulle
 
   // Change d'étape : prépare l'écran (rubrique, liste…) puis amène la cible
   // dans la zone visible.
@@ -79,18 +81,26 @@ export default function Tour({ steps, onStep, onClose }) {
     const vh = window.innerHeight;
     const bw = b.offsetWidth;
     const bh = b.offsetHeight;
+    // Place réservée à Clovis au-dessus (ou au-dessous) de la bulle.
+    const room = CLOVIS_ROOM[pose] || 0;
     if (!rect) {
-      setPos({ left: (vw - bw) / 2, top: Math.max(EDGE, (vh - bh) / 2), side: "none" });
+      const top = Math.max(EDGE + room, (vh - bh + room) / 2);
+      setPos({ left: (vw - bw) / 2, top, side: "none", at: "top-left" });
       return;
     }
     const cx = rect.left + rect.width / 2;
     const below = rect.top + rect.height / 2 < vh / 2;
+    // Bulle sous la cible : Clovis passe dessous (suspendu) pour ne pas cacher la cible.
+    const vert = below && pose === "peek" ? "bottom" : "top";
     let top = below ? rect.top + rect.height + GAP : rect.top - GAP - bh;
-    top = Math.min(Math.max(EDGE, top), vh - bh - EDGE);
+    top = Math.min(top, vh - bh - EDGE - (vert === "bottom" ? room : 0));
+    top = Math.max(EDGE + (vert === "top" ? room : 0), top);
     let left = Math.min(Math.max(EDGE, cx - bw / 2), vw - bw - EDGE);
     const arrow = Math.min(Math.max(18, cx - left), bw - 18);
-    setPos({ left, top, side: below ? "top" : "bottom", arrow });
-  }, [rect, i]);
+    // Coin opposé à la pointe de la bulle.
+    const at = vert + (arrow > bw / 2 ? "-left" : "-right");
+    setPos({ left, top, side: below ? "top" : "bottom", arrow, at });
+  }, [rect, i, pose]);
 
   const finish = useCallback(() => {
     setLeaving(true);
@@ -156,6 +166,7 @@ export default function Tour({ steps, onStep, onClose }) {
             {!last && <Icon name="arrowRight" size={16} />}
           </button>
         </div>
+        {pos && <Clovis pose={pose} at={pos.at} />}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
+import Clovis from "./Clovis";
 
 const DELAY_MS = 2500; // laisse le temps de découvrir la page avant d'apparaître
 
@@ -27,6 +28,7 @@ export default function InstallNudge({ onGo, onDismiss }) {
 
   return (
     <div className={"nudge" + (leaving ? " is-leaving" : "")} role="dialog" aria-label="Installer l'appli">
+      <Clovis pose="peek" at="top-left" />
       <button
         className="icon-btn icon-btn-sm nudge-close"
         onClick={() => close(onDismiss)}

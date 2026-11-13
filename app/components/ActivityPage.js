@@ -2,6 +2,7 @@ import { timeAgo, dayLabel } from "../lib/format";
 import Avatar from "./Avatar";
 import Icon from "./Icon";
 import RefreshButton from "./RefreshButton";
+import ClovisArt from "./ClovisArt";
 
 // « Activité » : les dernières actions de la famille, regroupées par jour.
 export default function ActivityPage({ items, loading, online, onRefresh }) {
@@ -35,12 +36,13 @@ export default function ActivityPage({ items, loading, online, onRefresh }) {
       </header>
 
       {loading && shown.length === 0 ? (
-        <p className="empty">Chargement…</p>
+        <div className="empty-state empty-loading">
+          <ClovisArt pose="fouille" width={120} className="empty-art" />
+          <p className="empty-text">Clovis fouille dans les nouvelles…</p>
+        </div>
       ) : shown.length === 0 ? (
         <div className="empty-state">
-          <span className="empty-icon">
-            <Icon name="clock" size={30} />
-          </span>
+          <ClovisArt pose="sieste" width={130} className="empty-art" />
           <p className="empty-title">Rien pour l'instant</p>
           <p className="empty-text">
             {online

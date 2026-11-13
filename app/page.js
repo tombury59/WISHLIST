@@ -36,6 +36,8 @@ import AccountPage from "./components/AccountPage";
 import InstallGuide from "./components/InstallGuide";
 import InstallNudge from "./components/InstallNudge";
 import Tour from "./components/Tour";
+import ClovisArt from "./components/ClovisArt";
+import ClovisToast from "./components/ClovisToast";
 import { isTouchPlatform } from "./lib/install";
 import { STORAGE } from "./lib/constants";
 import * as profileApi from "./lib/profile-api";
@@ -127,6 +129,9 @@ export default function Home() {
   const [editData, setEditData] = useState(null); // { member, wish }
   const [onlyFree, setOnlyFree] = useState(false); // filtre « encore libres »
   const [giftsTab, setGiftsTab] = useState("give"); // Cadeaux : "give" | "received"
+  // Petite bulle de Clovis qui célèbre une action (réservation, cadeau reçu…).
+  const [cheer, setCheer] = useState(null);
+  const cheerUp = (pose, text) => setCheer({ pose, text, id: Date.now() });
 
   const auth = useAuth({
     setPin,
@@ -258,6 +263,8 @@ export default function Home() {
   // Les souhaits « déjà reçus » ne figurent plus dans la liste (ni la sienne,
   // ni celle vue par les autres) : ils sont rangés dans Cadeaux › Reçus.
   const rawList = wishesApi.wishes[active] || [];
+  // Rien encore reçu du serveur ni du cache : premier chargement en cours.
+  const listsLoading = Object.keys(wishesApi.wishes).length === 0;
   const activeWishes = rawList.filter((w) => !w.disabled);
   const fullList = activeWishes;
   const receivedHere = rawList.length - activeWishes.length;
@@ -300,7 +307,10 @@ export default function Home() {
     canEdit: isMine,
     ranks,
     onDelete: requestDeleteWish,
-    onSetDisabled: wishesApi.setWishDisabled,
+    onSetDisabled: (member, wishId, disabled) => {
+      wishesApi.setWishDisabled(member, wishId, disabled);
+      if (disabled) cheerUp("bond", "Un cadeau reçu, youpi ! Il est rangé dans Cadeaux › Reçus.");
+    },
     onRequestEdit: requestEditWish,
     onToggleReaction: (member, wishId, reaction) =>
       wishesApi.toggleReaction(member, wishId, reaction, me),
@@ -312,7 +322,11 @@ export default function Home() {
     // ne passe rien (et le serveur n'envoie rien de toute façon).
     canReserve: !isMine,
     reservations: activeResa,
-    onReserve: resa.reserve,
+    onReserve: async (member, wishId) => {
+      if (await resa.reserve(member, wishId)) {
+        cheerUp("trouve", `Bien joué ! C'est noté, et ${member} n'en saura rien.`);
+      }
+    },
     onUnreserve: resa.unreserve,
   };
 
@@ -320,8 +334,14 @@ export default function Home() {
   const tourSteps = [
     {
       title: `Bienvenue ${me} !`,
-      text: "Ici, toute la famille partage ses envies de cadeaux. On fait le tour en 30 secondes ?",
+      text: (
+        <>
+          Moi, c'est <strong>Clovis</strong>. Je fouine partout pour
+          dénicher les envies de chacun. Je te fais visiter en 30 secondes&nbsp;?
+        </>
+      ),
       cta: "Allons-y",
+      mascot: "wave",
       mine: true,
     },
     {
@@ -385,6 +405,7 @@ export default function Home() {
     {
       target: "nav-account",
       mine: true,
+      mascot: "dance",
       text: (
         <>
           Et ton <strong>compte</strong>&nbsp;: ta couleur, ton code, et de quoi installer
@@ -476,7 +497,11 @@ export default function Home() {
                 {isMine &&
                   (online ? (
                     <AddForm
-                      onAdd={(name, link) => wishesApi.addWish(active, name, link)}
+                      onAdd={async (name, link) => {
+                        const first = rawList.length === 0;
+                        await wishesApi.addWish(active, name, link);
+                        if (first) cheerUp("bond", "Ta première envie ! La famille saura quoi t'offrir.");
+                      }}
                     />
                   ) : (
                     <p className="hint">
@@ -523,16 +548,26 @@ export default function Home() {
 
                 {isMine && view === "list" && activeWishes.length > 1 && (
                   <p className="hint hint-quiet">
-                    <Icon name="grip" size={14} /> Glisse tes souhaits pour les classer :
-                    les trois premiers sont mis en avant.
+                    <ClovisArt pose="pointeur" width={58} className="hint-art" />
+                    <span>
+                      Glisse tes souhaits pour les classer : les trois premiers sont mis en
+                      avant.
+                    </span>
                   </p>
                 )}
 
-                {list.length === 0 ? (
+                {listsLoading ? (
+                  <div className="empty-state empty-loading">
+                    <ClovisArt pose="fouille" width={120} className="empty-art" />
+                    <p className="empty-text">Clovis fouille dans les listes…</p>
+                  </div>
+                ) : list.length === 0 ? (
                   <div className="empty-state">
-                    <span className="empty-icon">
-                      <Icon name="gift" size={30} />
-                    </span>
+                    <ClovisArt
+                      pose={filtering ? "decu" : "sieste"}
+                      width={filtering ? 110 : 130}
+                      className="empty-art"
+                    />
                     {filtering ? (
                       <>
                         <p className="empty-title">Tout est déjà réservé</p>
@@ -658,6 +693,8 @@ export default function Home() {
         isTouchPlatform(install.platform) && (
           <InstallNudge onGo={followNudge} onDismiss={hideHint} />
         )}
+
+      <ClovisToast cheer={cheer} onDone={() => setCheer(null)} />
 
       <BottomNav
         me={me}
