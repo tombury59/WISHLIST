@@ -64,6 +64,7 @@ export default function Home() {
   const [confirmData, setConfirmData] = useState(null); // { message, action }
   const [editData, setEditData] = useState(null); // { member, wish }
   const [onlyFree, setOnlyFree] = useState(false); // filtre « encore libres »
+  const [giftsTab, setGiftsTab] = useState("give"); // Cadeaux : "give" | "received"
 
   const auth = useAuth({
     setPin,
@@ -192,10 +193,12 @@ export default function Home() {
   const isMine = active === me;
   const activeResa = isMine ? null : resa.reservations[active] || null;
 
-  // Souhaits actifs d'abord (dans l'ordre choisi), « déjà reçus » en fin de liste.
+  // Les souhaits « déjà reçus » ne figurent plus dans la liste (ni la sienne,
+  // ni celle vue par les autres) : ils sont rangés dans Cadeaux › Reçus.
   const rawList = wishesApi.wishes[active] || [];
   const activeWishes = rawList.filter((w) => !w.disabled);
-  const fullList = [...activeWishes, ...rawList.filter((w) => w.disabled)];
+  const fullList = activeWishes;
+  const receivedHere = rawList.length - activeWishes.length;
 
   // Rang réel de chaque souhait actif (1 = le plus désiré) : reste juste même
   // quand la liste est filtrée.
@@ -310,7 +313,9 @@ export default function Home() {
                           ? "Aucun souhait pour l'instant"
                           : "Aucune idée pour l'instant"
                         : isMine
-                        ? `${plural(activeWishes.length, "souhait")}, classés par envie`
+                        ? activeWishes.length === 1
+                          ? "1 souhait"
+                          : `${activeWishes.length} souhaits, classés par envie`
                         : `${plural(activeWishes.length, "idée")} · ${
                             freeCount === 0
                               ? "tout est réservé"
@@ -355,6 +360,25 @@ export default function Home() {
                       Encore libres <span className="chip-n">{freeCount}</span>
                     </button>
                   </div>
+                )}
+
+                {/* Ma liste : lien discret vers les cadeaux déjà reçus. */}
+                {isMine && receivedHere > 0 && (
+                  <button
+                    className="hint hint-link"
+                    onClick={() => {
+                      setGiftsTab("received");
+                      go("gifts");
+                    }}
+                  >
+                    <Icon name="check" size={15} strokeWidth={2.2} />
+                    <span>
+                      {receivedHere === 1
+                        ? "1 cadeau reçu a été retiré de ta liste"
+                        : `${receivedHere} cadeaux reçus ont été retirés de ta liste`}
+                    </span>
+                    <Icon name="chevronRight" size={16} />
+                  </button>
                 )}
 
                 {isMine && view === "list" && activeWishes.length > 1 && (
@@ -424,6 +448,8 @@ export default function Home() {
           <GiftsPage
             groups={giftGroups}
             received={received}
+            tab={giftsTab}
+            onTab={setGiftsTab}
             online={online}
             onUnreserve={resa.unreserve}
             onRestore={(wishId) => wishesApi.setWishDisabled(me, wishId, false)}

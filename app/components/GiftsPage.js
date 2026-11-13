@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { normalizeUrl, hostOf } from "../lib/format";
 import Avatar from "./Avatar";
 import Icon from "./Icon";
@@ -61,12 +60,14 @@ function EmptyState({ title, text }) {
 export default function GiftsPage({
   groups,
   received,
+  tab = "give", // onglet affiché : "give" | "received" (piloté par le parent)
+  onTab,
   online,
   onUnreserve,
   onRestore,
   onOpenList,
 }) {
-  const [tab, setTab] = useState("give"); // "give" | "received"
+  const setTab = onTab;
   const toGive = groups.reduce((n, g) => n + g.items.length, 0);
 
   return (
@@ -155,7 +156,7 @@ export default function GiftsPage({
         (received.length === 0 ? (
           <EmptyState
             title="Aucun cadeau reçu pour l'instant"
-            text="Quand tu reçois un cadeau de ta liste, ouvre son menu (⋮) et choisis « Marquer comme déjà reçu » : il arrive ici et n'est plus proposé aux autres."
+            text="Quand tu reçois un cadeau de ta liste, ouvre son menu (⋮) et choisis « Marquer comme déjà reçu » : il quitte ta liste, arrive ici et n'est plus proposé aux autres."
           />
         ) : (
           <ul className="card gift-list">

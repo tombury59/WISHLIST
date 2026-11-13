@@ -337,6 +337,24 @@ a {
   font-size: 13.5px;
 }
 
+/* Variante cliquable (lien vers Cadeaux › Reçus) */
+.hint-link {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.hint-link > span {
+  flex: 1;
+}
+
+.hint-link:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
 .hint-quiet {
   padding: 0 4px;
   background: none;
