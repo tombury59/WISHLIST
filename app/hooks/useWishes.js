@@ -188,6 +188,24 @@ export function useWishes(pin) {
     api.editWish(pinRef.current, { member, wishId, name, link }).catch(() => {});
   }
 
+  // Désactive / réactive un souhait (mise à jour immédiate puis envoi ; en cas
+  // d'échec on revient à l'état précédent).
+  function setWishDisabled(member, wishId, disabled) {
+    const apply = (value) =>
+      setWishes((prev) => ({
+        ...prev,
+        [member]: (prev[member] || []).map((w) => {
+          if (w.id !== wishId) return w;
+          const { disabled: _old, ...rest } = w;
+          return value ? { ...rest, disabled: true } : rest;
+        }),
+      }));
+    apply(disabled);
+    api
+      .setWishDisabled(pinRef.current, { member, wishId, disabled })
+      .catch(() => apply(!disabled));
+  }
+
   async function deleteWish(member, id) {
     setWishes((prev) => ({
       ...prev,
@@ -286,6 +304,7 @@ export function useWishes(pin) {
     loadWishes,
     addWish,
     editWish,
+    setWishDisabled,
     deleteWish,
     addComment,
     deleteComment,

@@ -4,6 +4,7 @@ import { REACTIONS } from "../../lib/reactions";
 import { kv } from "../../lib/kv";
 import { checkPin, unauthorized } from "../_lib/auth";
 import { logHistory, newId } from "../_lib/history";
+import { RESERVED_KEY, reservedField } from "../_lib/reservations";
 
 export const dynamic = "force-dynamic";
 
@@ -35,9 +36,17 @@ function sortByOrder(list, order) {
 export async function GET(request) {
   if (!checkPin(request)) return unauthorized();
 
+  // Base limitée en requêtes : les ordres de TOUS les membres sont lus en une
+  // seule commande (MGET) au lieu d'un GET par membre -> 11 commandes au lieu
+  // de 20 par chargement. Le tout est lancé en parallèle (plus rapide, même coût).
+  const [orders, hashes] = await Promise.all([
+    kv.mget(...MEMBER_NAMES.map(orderKeyFor)),
+    Promise.all(MEMBER_NAMES.map((member) => kv.hgetall(keyFor(member)))),
+  ]);
+
   const result = {};
-  for (const member of MEMBER_NAMES) {
-    const items = await kv.hgetall(keyFor(member));
+  MEMBER_NAMES.forEach((member, i) => {
+    const items = hashes[i];
     const list = items
       ? Object.values(items).map((w) => ({
           ...w,
@@ -45,9 +54,8 @@ export async function GET(request) {
           reactions: w.reactions || {},
         }))
       : [];
-    const order = (await kv.get(orderKeyFor(member))) || [];
-    result[member] = sortByOrder(list, order);
-  }
+    result[member] = sortByOrder(list, orders?.[i] || []);
+  });
   return NextResponse.json({ wishes: result });
 }
 
@@ -99,9 +107,11 @@ export async function PATCH(request) {
     if (!MEMBER_NAMES.includes(member)) {
       return NextResponse.json({ error: "Membre inconnu" }, { status: 400 });
     }
+    // 1 seule commande : on ne relit plus les souhaits pour filtrer les IDs
+    // inconnus — le tri (sortByOrder) les ignore de toute façon à la lecture.
+    // On borne juste la taille pour ne pas stocker n'importe quoi.
     const ids = Array.isArray(body.ids) ? body.ids.filter((x) => typeof x === "string") : [];
-    const items = (await kv.hgetall(keyFor(member))) || {};
-    const clean = ids.filter((id) => items[id]);
+    const clean = [...new Set(ids)].slice(0, 500);
     await kv.set(orderKeyFor(member), clean);
     return NextResponse.json({ ok: true, ids: clean });
   }
@@ -125,6 +135,22 @@ export async function PATCH(request) {
     wish.link = link;
     await kv.hset(keyFor(member), { [wishId]: wish });
     return NextResponse.json({ ok: true });
+  }
+
+  // ---- Activation / désactivation ----
+  // { op: "disable", member, wishId, disabled: true|false }
+  // Un souhait désactivé (ex. cadeau déjà reçu) reste en base et dans la liste,
+  // mais grisé, hors compteur et non réservable. On stocke `disabled: true`
+  // sur le souhait ; réactiver retire simplement le champ.
+  if (body.op === "disable") {
+    const wish = await kv.hget(keyFor(member), wishId);
+    if (!wish) {
+      return NextResponse.json({ error: "Souhait introuvable" }, { status: 404 });
+    }
+    if (body.disabled) wish.disabled = true;
+    else delete wish.disabled;
+    await kv.hset(keyFor(member), { [wishId]: wish });
+    return NextResponse.json({ ok: true, disabled: Boolean(wish.disabled) });
   }
 
   // ---- Réaction ----
@@ -209,6 +235,8 @@ export async function DELETE(request) {
   }
   const wish = await kv.hget(keyFor(member), id);
   await kv.hdel(keyFor(member), id);
+  // Le souhait disparaît : sa réservation éventuelle aussi (sans rien révéler).
+  await kv.hdel(RESERVED_KEY, reservedField(member, id));
   if (wish) await logHistory({ type: "remove", member, name: wish.name });
 
   return NextResponse.json({ ok: true });

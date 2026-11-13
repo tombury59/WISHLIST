@@ -27,6 +27,9 @@ function createMemoryKv() {
     async get(key) {
       return scalars.has(key) ? clone(scalars.get(key)) : null;
     },
+    async mget(...keys) {
+      return keys.map((k) => (scalars.has(k) ? clone(scalars.get(k)) : null));
+    },
     async set(key, value) {
       // Le 3e argument éventuel ({ ex }) est ignoré en mémoire (pas de TTL).
       scalars.set(key, clone(value));
@@ -49,6 +52,13 @@ function createMemoryKv() {
       if (!h) hashes.set(key, (h = new Map()));
       for (const [f, v] of Object.entries(obj)) h.set(f, clone(v));
       return Object.keys(obj).length;
+    },
+    async hsetnx(key, field, value) {
+      let h = hashes.get(key);
+      if (!h) hashes.set(key, (h = new Map()));
+      if (h.has(field)) return 0;
+      h.set(field, clone(value));
+      return 1;
     },
     async hdel(key, field) {
       const h = hashes.get(key);

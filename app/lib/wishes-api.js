@@ -21,6 +21,14 @@ export function editWish(pin, { member, wishId, name, link }) {
   });
 }
 
+// Désactive (ex. cadeau déjà reçu) ou réactive un souhait.
+export function setWishDisabled(pin, { member, wishId, disabled }) {
+  return request("/api/wishes", pin, {
+    method: "PATCH",
+    body: JSON.stringify({ op: "disable", member, wishId, disabled }),
+  });
+}
+
 export function removeWish(pin, { member, id }) {
   return request("/api/wishes", pin, {
     method: "DELETE",
@@ -61,6 +69,26 @@ export function setReaction(pin, { member, wishId, reaction, author, on }) {
   return request("/api/wishes", pin, {
     method: "PATCH",
     body: JSON.stringify({ member, wishId, reaction, author, on }),
+  });
+}
+
+// ---- Réservations ----
+// Le serveur ne renvoie jamais les réservations de la liste du `viewer`.
+export function getReservations(pin, viewer) {
+  return request("/api/reservations?viewer=" + encodeURIComponent(viewer), pin);
+}
+
+export function reserveWish(pin, { member, wishId, by }) {
+  return request("/api/reservations", pin, {
+    method: "POST",
+    body: JSON.stringify({ member, wishId, by }),
+  });
+}
+
+export function unreserveWish(pin, { member, wishId, by }) {
+  return request("/api/reservations", pin, {
+    method: "DELETE",
+    body: JSON.stringify({ member, wishId, by }),
   });
 }
 
