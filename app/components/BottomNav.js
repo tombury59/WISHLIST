@@ -1,7 +1,7 @@
 import Avatar from "./Avatar";
 import Icon from "./Icon";
 
-// Barre de navigation du bas (téléphone) : 4 rubriques accessibles au pouce.
+// Barre de navigation du bas (téléphone) : 5 rubriques accessibles au pouce.
 // `nudge` : l'onglet Compte pulse pendant que la bulle d'installation est affichée.
 export default function BottomNav({ me, section, giftCount, onGo, nudge = false }) {
   const item = (key, label, icon) => (
@@ -31,6 +31,7 @@ export default function BottomNav({ me, section, giftCount, onGo, nudge = false 
           {giftCount > 0 && <span className="tabbar-badge">{giftCount}</span>}
         </>
       )}
+      {item("notes", "Notes", <Icon name="note" size={22} />)}
       {item("activity", "Activité", <Icon name="clock" size={22} />)}
       {item("account", "Compte", <Avatar name={me} size="xs" />)}
     </nav>

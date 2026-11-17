@@ -29,6 +29,7 @@ import SortableWishList from "./components/SortableWishList";
 import CommentsPanel from "./components/CommentsPanel";
 import GiftsPage from "./components/GiftsPage";
 import ActivityPage from "./components/ActivityPage";
+import NotesPage from "./components/NotesPage";
 import ConfirmModal from "./components/ConfirmModal";
 import EditModal from "./components/EditModal";
 import OfflineBanner from "./components/OfflineBanner";
@@ -41,6 +42,7 @@ import ClovisToast from "./components/ClovisToast";
 import { isTouchPlatform } from "./lib/install";
 import { STORAGE } from "./lib/constants";
 import * as profileApi from "./lib/profile-api";
+import * as notesApi from "./lib/notes-api";
 import { updateUserPin } from "./lib/pins-api";
 import { setColorOverrides } from "./lib/format";
 import { MEMBERS } from "./lib/members";
@@ -125,7 +127,7 @@ export default function Home() {
 
   // État transitoire d'UI (remis à zéro à la déconnexion).
   const [openComments, setOpenComments] = useState(null);
-  const [confirmData, setConfirmData] = useState(null); // { message, action }
+  const [confirmData, setConfirmData] = useState(null); // { message, action, label }
   const [editData, setEditData] = useState(null); // { member, wish }
   const [onlyFree, setOnlyFree] = useState(false); // filtre « encore libres »
   const [giftsTab, setGiftsTab] = useState("give"); // Cadeaux : "give" | "received"
@@ -149,6 +151,78 @@ export default function Home() {
 
   // Réservations visibles par `me` (jamais celles de sa propre liste).
   const resa = useReservations(pin, me, auth.authed);
+
+  // ---------- Notes perso (une page par membre, enregistrée à la main) ----------
+  const [notes, setNotes] = useState(null); // { text, at } une fois chargées
+  const [notesDraft, setNotesDraft] = useState("");
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [notesError, setNotesError] = useState("");
+  const notesDirty = notes !== null && notesDraft !== notes.text;
+
+  async function loadNotes() {
+    if (!me) return;
+    setNotesLoading(true);
+    setNotesError("");
+    try {
+      const data = await notesApi.getNotes(pin, me);
+      setNotes(data);
+      setNotesDraft(data.text || "");
+    } catch {
+      setNotesError(
+        online ? "Impossible de charger tes notes pour le moment." : "Tes notes ne sont pas disponibles hors ligne."
+      );
+    } finally {
+      setNotesLoading(false);
+    }
+  }
+
+  async function saveNotes() {
+    const text = notesDraft;
+    const { at } = await notesApi.saveNotes(pin, { member: me, text });
+    setNotes({ text, at });
+  }
+
+  // Chargées à la première ouverture de la rubrique (1 requête), puis gardées.
+  useEffect(() => {
+    if (section === "notes" && auth.authed && me && !notes && !notesLoading) loadNotes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section, auth.authed, me]);
+
+  // Changement de profil / déconnexion : on oublie les notes du précédent.
+  useEffect(() => {
+    setNotes(null);
+    setNotesDraft("");
+    setNotesError("");
+  }, [me, auth.authed]);
+
+  // Fermer l'onglet avec des modifications non enregistrées : le navigateur prévient.
+  useEffect(() => {
+    if (!notesDirty) return;
+    const warn = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [notesDirty]);
+
+  // Quitter les notes avec des modifications non enregistrées : on demande.
+  function leaveNotes(action) {
+    if (section === "notes" && notesDirty) {
+      askConfirm(
+        "Attention : toutes les informations non sauvegardées seront perdues.",
+        () => {
+          setNotesDraft(notes.text);
+          action();
+        },
+        "Quitter sans enregistrer"
+      );
+    } else {
+      action();
+    }
+  }
+  const guardedGo = (next) => (next === "notes" ? go(next) : leaveNotes(() => go(next)));
+  const guardedOpenList = (member) => leaveNotes(() => openList(member));
 
   // Charge les couleurs partagées une fois connecté (et les rend actives via
   // avatarColor dans toute l'appli).
@@ -175,8 +249,8 @@ export default function Home() {
   const openCommentsFor = (id) => setOpenComments(id);
   const closeComments = () => setOpenComments(null);
 
-  function askConfirm(message, action) {
-    setConfirmData({ message, action });
+  function askConfirm(message, action, label) {
+    setConfirmData({ message, action, label });
   }
 
   // Demandes de suppression / modification -> passent par les popups.
@@ -394,6 +468,17 @@ export default function Home() {
       ),
     },
     {
+      target: "nav-notes",
+      mine: true,
+      mascot: "point",
+      text: (
+        <>
+          Tes <strong>notes</strong>, rien qu'à toi&nbsp;: personne d'autre ne peut les lire.
+          Tape <strong>@</strong> pour citer quelqu'un, puis touche son nom pour ouvrir sa liste.
+        </>
+      ),
+    },
+    {
       target: "nav-activity",
       mine: true,
       text: (
@@ -445,8 +530,8 @@ export default function Home() {
         active={active}
         counts={counts}
         giftCount={giftCount}
-        onOpenList={openList}
-        onGo={go}
+        onOpenList={guardedOpenList}
+        onGo={guardedGo}
       />
 
       <main className="main">
@@ -634,6 +719,22 @@ export default function Home() {
         )}
 
         {/* ================= ACTIVITÉ ================= */}
+        {/* ================= NOTES ================= */}
+        {section === "notes" && (
+          <NotesPage
+            me={me}
+            notes={notes}
+            loading={notesLoading}
+            error={notesError}
+            draft={notesDraft}
+            onDraft={setNotesDraft}
+            online={online}
+            onSave={saveNotes}
+            onRetry={loadNotes}
+            onMention={guardedOpenList}
+          />
+        )}
+
         {section === "activity" && (
           <ActivityPage
             items={historyApi.items}
@@ -701,7 +802,7 @@ export default function Home() {
         me={me}
         section={section}
         giftCount={giftCount}
-        onGo={go}
+        onGo={guardedGo}
         nudge={Boolean(
           install.platform && !install.installed && !hintHidden && isTouchPlatform(install.platform)
         )}
@@ -738,6 +839,7 @@ export default function Home() {
       {confirmData && (
         <ConfirmModal
           message={confirmData.message}
+          confirmLabel={confirmData.label}
           onCancel={() => setConfirmData(null)}
           onConfirm={() => {
             confirmData.action();

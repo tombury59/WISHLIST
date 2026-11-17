@@ -1,5 +1,5 @@
-// Popup de confirmation pour les suppressions.
-export default function ConfirmModal({ message, onCancel, onConfirm }) {
+// Popup de confirmation (suppressions, modifications non enregistrées…).
+export default function ConfirmModal({ message, onCancel, onConfirm, confirmLabel = "Supprimer" }) {
   return (
     <div className="overlay" onClick={onCancel}>
       <div className="sheet dialog dialog-confirm" onClick={(e) => e.stopPropagation()}>
@@ -9,7 +9,7 @@ export default function ConfirmModal({ message, onCancel, onConfirm }) {
             Annuler
           </button>
           <button className="btn btn-danger" onClick={onConfirm}>
-            Supprimer
+            {confirmLabel}
           </button>
         </div>
       </div>

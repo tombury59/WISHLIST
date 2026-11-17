@@ -47,6 +47,14 @@ export default function Sidebar({
           {giftCount > 0 && <span className="count count-accent">{giftCount}</span>}
         </button>
         <button
+          className={"side-item" + (section === "notes" ? " is-active" : "")}
+          onClick={() => onGo("notes")}
+          data-tour="nav-notes"
+        >
+          <Icon name="note" size={18} />
+          <span className="side-label">Mes notes</span>
+        </button>
+        <button
           className={"side-item" + (section === "activity" ? " is-active" : "")}
           onClick={() => onGo("activity")}
           data-tour="nav-activity"

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-// Rubrique affichée : listes, cadeaux (à offrir / reçus), activité, compte.
+// Rubrique affichée : listes, cadeaux (à offrir / reçus), notes, activité, compte.
 //
 // L'état vit dans le « hash » de l'URL (#cadeaux…) : le bouton Retour du
 // téléphone (ou du navigateur) revient donc à la rubrique précédente au lieu de
@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 const HASHES = {
   lists: "",
   gifts: "#cadeaux",
+  notes: "#notes",
   activity: "#activite",
   account: "#compte",
 };

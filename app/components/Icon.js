@@ -10,6 +10,12 @@ const PATHS = {
     </>
   ),
   list: <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />,
+  note: (
+    <>
+      <rect x="4" y="3" width="16" height="18" rx="2.5" />
+      <path d="M8 8h8M8 12h8M8 16h5" />
+    </>
+  ),
   clock: (
     <>
       <circle cx="12" cy="12" r="9" />
