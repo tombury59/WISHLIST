@@ -39,6 +39,7 @@ import InstallNudge from "./components/InstallNudge";
 import Tour from "./components/Tour";
 import ClovisArt from "./components/ClovisArt";
 import ClovisToast from "./components/ClovisToast";
+import ListEnd from "./components/ListEnd";
 import { isTouchPlatform } from "./lib/install";
 import { STORAGE } from "./lib/constants";
 import * as profileApi from "./lib/profile-api";
@@ -724,6 +725,11 @@ export default function Home() {
                       />
                     )}
                   </ViewTransition>
+                )}
+
+                {/* Liste bien remplie (vue liste) : Clovis au bout. */}
+                {!listsLoading && view === "list" && list.length >= 5 && (
+                  <ListEnd key={active} />
                 )}
               </section>
 

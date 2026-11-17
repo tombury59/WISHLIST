@@ -3589,12 +3589,12 @@ button.reserve {
 }
 
 /* Tailles : la tête de Clovis garde à peu près la même taille d'une pose à l'autre */
-.clovis-peek { width: 72px; overflow: hidden; }
-.clovis-wave { width: 84px; }
+.clovis-peek { width: 90px; overflow: hidden; } /* cadre de saison : dessin ≈ 72 px */
+.clovis-wave { width: 87px; }
 .clovis-dance { width: 100px; }
 .clovis-gift { width: 76px; }
 .clovis-point { width: 104px; }
-.nudge .clovis-peek { width: 64px; }
+.nudge .clovis-peek { width: 80px; }
 
 /* Au-dessus de la bulle. « peek » : le bas plat de la tête sur le bord, les
    pattes qui retombent sur la bulle. */
@@ -3749,7 +3749,7 @@ button.reserve {
   position: absolute;
   left: -22px;
   right: -22px;
-  bottom: 16%;
+  bottom: 15px;
   height: 3px;
   border-radius: 999px;
   background: var(--border-strong);
@@ -4029,4 +4029,80 @@ button.reserve {
     animation: none;
     box-shadow: 0 0 0 3px var(--accent);
   }
+}
+
+/* ------------------------------------------------------------------
+   20. Fin de liste : Clovis dépasse d'un rebord (« Tu as tout vu ! »)
+   ------------------------------------------------------------------ */
+.list-end {
+  display: flex;
+  justify-content: center;
+  margin: -8px 0 6px; /* le cadre garde de la place au-dessus pour les chapeaux */
+}
+
+.list-end-stage {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 0 18px;
+}
+
+/* Le rebord : ses pattes s'y posent */
+.list-end-stage::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--border-strong);
+}
+
+/* Il sort de derrière le rebord quand la fin de liste arrive à l'écran */
+.list-end-peek {
+  position: relative;
+  z-index: 1;
+  display: block;
+  overflow: hidden;
+  line-height: 0;
+}
+.list-end-peek .clovis-art img { animation: none; }
+.list-end-peek .clovis-art {
+  transform: translateY(100%);
+  transition: transform 0.6s cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+.list-end.is-seen .list-end-peek .clovis-art { transform: none; }
+.list-end.is-seen .list-end-peek .clovis-art img { animation: cl-bob 2.4s 0.8s ease-in-out infinite; }
+.list-end.is-seen .list-end-peek .clovis-art.is-dancing img { animation: cl-dance 1.1s ease-in-out infinite; }
+
+/* La bulle */
+.list-end-bubble {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 34px;
+  padding: 8px 13px;
+  border: 1px solid var(--accent-line);
+  border-radius: 14px 14px 14px 4px;
+  background: var(--surface-3);
+  color: var(--text);
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 15px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: scale(0.6) translateY(8px);
+  transform-origin: 0% 100%;
+  transition: opacity 0.25s 0.45s, transform 0.4s 0.45s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.list-end.is-seen .list-end-bubble {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .list-end-peek .clovis-art,
+  .list-end-bubble { transition: none; }
+  .list-end.is-seen .list-end-peek .clovis-art img { animation: none; }
 }
