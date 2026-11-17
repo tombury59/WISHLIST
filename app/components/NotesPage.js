@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { MEMBERS } from "../lib/members";
-import { avatarColor, timeAgo } from "../lib/format";
+import { avatarColor, normalizeUrl, timeAgo } from "../lib/format";
 import Avatar from "./Avatar";
 import Icon from "./Icon";
 import ClovisArt from "./ClovisArt";
@@ -12,7 +12,8 @@ import ClovisArt from "./ClovisArt";
 // Éditeur : un <textarea> au texte transparent posé sur un « miroir » qui
 // affiche le même texte, avec les @prénoms colorés (couleur de la personne).
 // Les deux ont exactement la même mise en forme, donc le curseur tombe pile.
-// Les @prénoms du miroir sont cliquables (ouvrent la liste de la personne).
+// Les @prénoms du miroir sont cliquables (ouvrent la liste de la personne),
+// les liens aussi (ouverts dans un nouvel onglet).
 //
 // Pas d'enregistrement automatique : bouton « Enregistrer » (ou Ctrl/Cmd+S).
 
@@ -29,13 +30,18 @@ const MENTION_AT_END = new RegExp(`@(${MEMBERS.map(escapeRe).join("|")})$`, "u")
 // Comparaison sans accents ni majuscules (« @be » propose Béné et Betty).
 const norm = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
-// Texte -> morceaux (texte brut / mention), pour le miroir.
-function splitMentions(text) {
+// Lien : commence par http(s):// ou www., s'arrête au premier espace ; la
+// ponctuation finale (point, virgule, parenthèse…) n'en fait pas partie.
+const URL_SRC = String.raw`(?:https?:\/\/|www\.)[^\s<>"]*[^\s<>".,;:!?)\]}'»]`;
+const TOKEN_RE = new RegExp(`(${URL_SRC})|${MENTION_RE.source}`, "gu");
+
+// Texte -> morceaux (texte brut / lien / mention), pour le miroir.
+function splitTokens(text) {
   const parts = [];
   let last = 0;
-  for (const m of text.matchAll(MENTION_RE)) {
+  for (const m of text.matchAll(TOKEN_RE)) {
     if (m.index > last) parts.push(text.slice(last, m.index));
-    parts.push({ name: m[1] });
+    parts.push(m[1] ? { url: m[1] } : { name: m[2] });
     last = m.index + m[0].length;
   }
   if (last < text.length) parts.push(text.slice(last));
@@ -201,7 +207,7 @@ export default function NotesPage({
     );
   }
 
-  const parts = splitMentions(draft);
+  const parts = splitTokens(draft);
   const near = draft.length > NOTES_MAX * 0.9;
 
   return (
@@ -210,11 +216,24 @@ export default function NotesPage({
 
       <div className="card notes-card">
         <div className="notes-editor">
-          {/* Le miroir : même texte, @prénoms colorés et cliquables. */}
+          {/* Le miroir : même texte, @prénoms colorés et liens cliquables. */}
           <div className="notes-text notes-mirror" aria-hidden="true">
             {parts.map((p, i) =>
               typeof p === "string" ? (
                 p
+              ) : p.url ? (
+                // Nouvel onglet : la note reste ouverte, rien n'est perdu.
+                <a
+                  key={i}
+                  href={normalizeUrl(p.url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  tabIndex={-1}
+                  className="note-link"
+                  title="Ouvrir le lien"
+                >
+                  {p.url}
+                </a>
               ) : (
                 <button
                   key={i}

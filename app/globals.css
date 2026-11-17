@@ -3891,6 +3891,19 @@ button.reserve {
 }
 .mention:hover { background: color-mix(in srgb, var(--c) 34%, transparent); }
 
+/* Lien dans une note : souligné, cliquable (nouvel onglet). Comme pour les
+   mentions, aucun espacement ajouté pour rester aligné avec le curseur. */
+.note-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+.note-link:hover { text-decoration-thickness: 2px; }
+
 /* Suggestions sous le « @ » */
 .mention-list {
   position: absolute;
