@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { MEMBERS } from "../lib/members";
-import { avatarColor, normalizeUrl, timeAgo } from "../lib/format";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { avatarColor, timeAgo } from "../lib/format";
+import {
+  buildEndRe,
+  buildTokenRe,
+  linkHref,
+  matchMembers,
+  matchWishes,
+  tokenize,
+  typingQuery,
+} from "../lib/richtext";
 import Avatar from "./Avatar";
 import Icon from "./Icon";
 import ClovisArt from "./ClovisArt";
@@ -10,50 +18,15 @@ import ClovisArt from "./ClovisArt";
 // Notes perso : une grande page que seul son auteur voit dans l'appli.
 //
 // Éditeur : un <textarea> au texte transparent posé sur un « miroir » qui
-// affiche le même texte, avec les @prénoms colorés (couleur de la personne).
-// Les deux ont exactement la même mise en forme, donc le curseur tombe pile.
-// Les @prénoms du miroir sont cliquables (ouvrent la liste de la personne),
-// les liens aussi (ouverts dans un nouvel onglet).
+// affiche le même texte, mis en valeur. Les deux ont exactement la même mise en
+// forme, donc le curseur tombe pile. Dans le miroir :
+//   - @Prénom   : couleur de la personne, ouvre sa liste ;
+//   - #Souhait  : couleur de son propriétaire, ouvre sa liste sur ce souhait ;
+//   - liens     : soulignés, ouverts dans un nouvel onglet.
 //
 // Pas d'enregistrement automatique : bouton « Enregistrer » (ou Ctrl/Cmd+S).
 
 export const NOTES_MAX = 10000;
-
-const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-// @Prénom complet, pas suivi d'une autre lettre (« @Tomate » n'est pas Tom).
-const MENTION_RE = new RegExp(
-  `@(${MEMBERS.map(escapeRe).join("|")})(?![\\p{L}\\p{N}])`,
-  "gu"
-);
-const MENTION_AT_END = new RegExp(`@(${MEMBERS.map(escapeRe).join("|")})$`, "u");
-
-// Comparaison sans accents ni majuscules (« @be » propose Béné et Betty).
-const norm = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-
-// Lien : commence par http(s):// ou www., s'arrête au premier espace ; la
-// ponctuation finale (point, virgule, parenthèse…) n'en fait pas partie.
-const URL_SRC = String.raw`(?:https?:\/\/|www\.)[^\s<>"]*[^\s<>".,;:!?)\]}'»]`;
-const TOKEN_RE = new RegExp(`(${URL_SRC})|${MENTION_RE.source}`, "gu");
-
-// Texte -> morceaux (texte brut / lien / mention), pour le miroir.
-function splitTokens(text) {
-  const parts = [];
-  let last = 0;
-  for (const m of text.matchAll(TOKEN_RE)) {
-    if (m.index > last) parts.push(text.slice(last, m.index));
-    parts.push(m[1] ? { url: m[1] } : { name: m[2] });
-    last = m.index + m[0].length;
-  }
-  if (last < text.length) parts.push(text.slice(last));
-  return parts;
-}
-
-// « @pré » en cours de frappe juste avant le curseur ?
-function mentionQuery(text, caret) {
-  const m = text.slice(0, caret).match(/(^|\s)@([\p{L}]{0,12})$/u);
-  if (!m) return null;
-  return { start: caret - m[2].length - 1, query: m[2] };
-}
 
 export default function NotesPage({
   me,
@@ -66,14 +39,27 @@ export default function NotesPage({
   onSave, // async () => void
   onRetry,
   onMention, // (prénom) => void
+  wishes = [], // [{ id, name, member }] : souhaits citables avec #
+  onWish, // (membre, idSouhait) => void
 }) {
   const areaRef = useRef(null);
   const measureRef = useRef(null);
   const caretRef = useRef(null); // position du curseur à remettre après un changement
-  const [suggest, setSuggest] = useState(null); // { start, query, items, index, top, left }
+  const [suggest, setSuggest] = useState(null); // { kind, start, query, items, index }
+  const [suggestPos, setSuggestPos] = useState(null);
   const [status, setStatus] = useState(""); // "", "saving", "saved", "error"
 
   const dirty = notes !== null && draft !== notes.text;
+
+  // Expressions construites à partir des noms de souhaits du moment.
+  const wishNamesKey = wishes.map((w) => w.name).join("\u0000");
+  const { tokenRe, endRe, byName } = useMemo(() => {
+    const names = wishes.map((w) => w.name);
+    const byName = new Map();
+    for (const w of wishes) if (!byName.has(w.name)) byName.set(w.name, w);
+    return { tokenRe: buildTokenRe(names), endRe: buildEndRe(names), byName };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wishNamesKey]);
 
   // Remet le curseur au bon endroit après un remplacement (mention, effacement).
   useLayoutEffect(() => {
@@ -112,9 +98,9 @@ export default function NotesPage({
   }
 
   function updateSuggest(text, caret) {
-    const q = mentionQuery(text, caret);
+    const q = typingQuery(text, caret, { wishes: wishes.length > 0 });
     if (!q) return setSuggest(null);
-    const items = MEMBERS.filter((n) => norm(n).startsWith(norm(q.query)));
+    const items = q.kind === "@" ? matchMembers(q.query) : matchWishes(wishes, q.query);
     if (!items.length) return setSuggest(null);
     setSuggest((cur) => ({
       ...q,
@@ -124,17 +110,16 @@ export default function NotesPage({
   }
 
   // La position de la liste se calcule une fois le texte affiché.
-  const [suggestPos, setSuggestPos] = useState(null);
   useLayoutEffect(() => {
     setSuggestPos(suggest ? coordsAt(suggest.start) : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suggest?.start, draft]);
 
-  function pick(name) {
+  function pick(item) {
     if (!suggest) return;
     const area = areaRef.current;
     const caret = area ? area.selectionStart : suggest.start + suggest.query.length + 1;
-    const insert = `@${name} `;
+    const insert = suggest.kind === "@" ? `@${item} ` : `#${item.name} `;
     const next = draft.slice(0, suggest.start) + insert + draft.slice(caret);
     if (next.length > NOTES_MAX) return;
     caretRef.current = suggest.start + insert.length;
@@ -167,12 +152,12 @@ export default function NotesPage({
         return;
       }
     }
-    // Une mention s'efface d'un coup.
+    // Une mention (@prénom ou #souhait) s'efface d'un coup.
     if (e.key === "Backspace") {
       const area = e.currentTarget;
       const { selectionStart: s, selectionEnd: end } = area;
       if (s !== end) return;
-      const m = draft.slice(0, s).match(MENTION_AT_END);
+      const m = draft.slice(0, s).match(endRe);
       if (!m) return;
       e.preventDefault();
       caretRef.current = s - m[0].length;
@@ -207,7 +192,7 @@ export default function NotesPage({
     );
   }
 
-  const parts = splitTokens(draft);
+  const parts = tokenize(draft, tokenRe);
   const near = draft.length > NOTES_MAX * 0.9;
 
   return (
@@ -216,38 +201,56 @@ export default function NotesPage({
 
       <div className="card notes-card">
         <div className="notes-editor">
-          {/* Le miroir : même texte, @prénoms colorés et liens cliquables. */}
+          {/* Le miroir : même texte, mis en valeur et cliquable. */}
           <div className="notes-text notes-mirror" aria-hidden="true">
-            {parts.map((p, i) =>
-              typeof p === "string" ? (
-                p
-              ) : p.url ? (
+            {parts.map((p, i) => {
+              if (typeof p === "string") return p;
+              if (p.url) {
                 // Nouvel onglet : la note reste ouverte, rien n'est perdu.
-                <a
-                  key={i}
-                  href={normalizeUrl(p.url)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  tabIndex={-1}
-                  className="note-link"
-                  title="Ouvrir le lien"
-                >
-                  {p.url}
-                </a>
-              ) : (
+                return (
+                  <a
+                    key={i}
+                    href={linkHref(p.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    tabIndex={-1}
+                    className="note-link"
+                    title="Ouvrir le lien"
+                  >
+                    {p.url}
+                  </a>
+                );
+              }
+              if (p.name) {
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    tabIndex={-1}
+                    className="mention"
+                    style={{ "--c": avatarColor(p.name) }}
+                    onClick={() => onMention(p.name)}
+                    title={`Ouvrir la liste de ${p.name}`}
+                  >
+                    @{p.name}
+                  </button>
+                );
+              }
+              const w = byName.get(p.wish);
+              return (
                 <button
                   key={i}
                   type="button"
                   tabIndex={-1}
-                  className="mention"
-                  style={{ "--c": avatarColor(p.name) }}
-                  onClick={() => onMention(p.name)}
-                  title={`Ouvrir la liste de ${p.name}`}
+                  className="wish-ref"
+                  style={{ "--c": avatarColor(w.member) }}
+                  onClick={() => onWish(w.member, w.id)}
+                  title={`Voir ce souhait dans la liste de ${w.member}`}
                 >
-                  @{p.name}
+                  #{p.wish}
                 </button>
-              )
-            )}
+              );
+            })}
             {"​"}
           </div>
           <textarea
@@ -255,7 +258,7 @@ export default function NotesPage({
             className="notes-text notes-area"
             value={draft}
             maxLength={NOTES_MAX}
-            placeholder="Écris ce que tu veux : idées de cadeaux, tailles, rappels… Tape @ pour citer quelqu'un."
+            placeholder="Écris ce que tu veux : idées de cadeaux, tailles, rappels… Tape @ pour citer quelqu'un, # pour citer un souhait."
             spellCheck
             onChange={(e) => {
               onDraft(e.target.value);
@@ -266,33 +269,43 @@ export default function NotesPage({
             onBlur={() => setTimeout(() => setSuggest(null), 150)}
             aria-label="Mes notes"
           />
-          {/* Clone caché qui sert à mesurer où se trouve le « @ ». */}
+          {/* Clone caché qui sert à mesurer où se trouve le « @ » ou le « # ». */}
           <div ref={measureRef} className="notes-text notes-measure" aria-hidden="true" />
 
           {suggest && suggestPos && (
             <ul
-              className="mention-list"
+              className={"mention-list" + (suggest.kind === "#" ? " mention-list-wide" : "")}
               role="listbox"
               style={{ top: suggestPos.top + 4, left: suggestPos.left }}
             >
-              {suggest.items.map((name, i) => (
-                <li key={name}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={i === suggest.index}
-                    className={"mention-option" + (i === suggest.index ? " is-on" : "")}
-                    // mousedown : agit avant que le champ perde le focus
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      pick(name);
-                    }}
-                  >
-                    <Avatar name={name} size="xs" />
-                    <span>{name}</span>
-                  </button>
-                </li>
-              ))}
+              {suggest.items.map((item, i) => {
+                const isWish = suggest.kind === "#";
+                return (
+                  <li key={isWish ? item.id : item}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={i === suggest.index}
+                      className={"mention-option" + (i === suggest.index ? " is-on" : "")}
+                      // mousedown : agit avant que le champ perde le focus
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        pick(item);
+                      }}
+                    >
+                      <Avatar name={isWish ? item.member : item} size="xs" />
+                      {isWish ? (
+                        <span className="mention-option-text">
+                          <span className="mention-option-name">{item.name}</span>
+                          <small>{item.member === me ? "Ma liste" : item.member}</small>
+                        </span>
+                      ) : (
+                        <span>{item}</span>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { matchMembers, typingQuery } from "../lib/richtext";
 import Avatar from "./Avatar";
 import Icon from "./Icon";
+import RichText from "./RichText";
 
 // Panneau des commentaires : latéral (grand écran), en dessous (carrousel sur
 // écran étroit) ou en modale (liste sur écran étroit).
 // `variant` = "side" | "modal".
+// Les commentaires affichent les liens (cliquables) et les @prénoms (colorés,
+// ils ouvrent la liste de la personne) ; taper « @ » propose la famille.
 export default function CommentsPanel({
   wish,
   member,
@@ -16,10 +20,50 @@ export default function CommentsPanel({
   onAddComment,
   onDeleteComment,
   onClose,
+  onMention, // (prénom) => void : ouvre sa liste
 }) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [suggest, setSuggest] = useState(null); // { start, query, items, index }
+  const inputRef = useRef(null);
   const comments = wish.comments || [];
+
+  function updateSuggest(value, caret) {
+    const q = typingQuery(value, caret);
+    const items = q ? matchMembers(q.query) : [];
+    setSuggest(items.length ? { ...q, items, index: 0 } : null);
+  }
+
+  function pick(name) {
+    if (!suggest) return;
+    const input = inputRef.current;
+    const caret = input ? input.selectionStart : text.length;
+    const insert = `@${name} `;
+    const next = text.slice(0, suggest.start) + insert + text.slice(caret);
+    setText(next);
+    setSuggest(null);
+    requestAnimationFrame(() => {
+      if (!input) return;
+      input.focus();
+      const c = suggest.start + insert.length;
+      input.setSelectionRange(c, c);
+    });
+  }
+
+  function onKeyDown(e) {
+    if (!suggest) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const d = e.key === "ArrowDown" ? 1 : -1;
+      setSuggest((s) => ({ ...s, index: (s.index + d + s.items.length) % s.items.length }));
+    } else if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      pick(suggest.items[suggest.index]);
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setSuggest(null);
+    }
+  }
 
   async function submit(e) {
     e.preventDefault();
@@ -57,7 +101,7 @@ export default function CommentsPanel({
                 <Avatar name={c.author || "?"} size="sm" />
                 <div className="comment-bubble">
                   {c.author && <span className="comment-author">{c.author}</span>}
-                  <span className="comment-text">{c.text}</span>
+                  <RichText className="comment-text" text={c.text} onMention={onMention} />
                 </div>
                 {c.author === me && online && (
                   <button
@@ -81,11 +125,38 @@ export default function CommentsPanel({
 
       {online ? (
         <form className="comment-form" onSubmit={submit}>
+          {/* Suggestions « @ » : la famille, filtrée au fil de la frappe. */}
+          {suggest && (
+            <div className="comment-suggest" role="listbox" aria-label="Citer quelqu'un">
+              {suggest.items.map((name, i) => (
+                <button
+                  key={name}
+                  type="button"
+                  role="option"
+                  aria-selected={i === suggest.index}
+                  className={"chip comment-suggest-chip" + (i === suggest.index ? " is-on" : "")}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    pick(name);
+                  }}
+                >
+                  <Avatar name={name} size="xs" />
+                  {name}
+                </button>
+              ))}
+            </div>
+          )}
           <input
+            ref={inputRef}
             className="field"
             placeholder={`Commenter en tant que ${me}…`}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value);
+              updateSuggest(e.target.value, e.target.selectionStart);
+            }}
+            onKeyDown={onKeyDown}
+            onBlur={() => setTimeout(() => setSuggest(null), 150)}
             aria-label="Ton commentaire"
           />
           <button

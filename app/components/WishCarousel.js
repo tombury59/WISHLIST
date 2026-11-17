@@ -35,6 +35,13 @@ export default function WishCarousel({ list, itemProps }) {
     return () => emblaApi.off("select", onSelect);
   }, [emblaApi]);
 
+  // Ouvert depuis un #souhait des notes : on se place directement sur lui.
+  useEffect(() => {
+    if (!emblaApi || !itemProps.focusId) return;
+    const i = list.findIndex((w) => w.id === itemProps.focusId);
+    if (i >= 0) emblaApi.scrollTo(i, true);
+  }, [emblaApi, itemProps.focusId, list]);
+
   // Effet « une carte devant, les voisines en arrière » : on réduit et estompe
   // les cartes selon leur distance au centre, mis à jour à chaque frame.
   useEffect(() => {

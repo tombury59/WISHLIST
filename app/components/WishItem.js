@@ -22,6 +22,7 @@ export default function WishItem({
   ranks = null, // { wishId: rang réel } — stable même quand la liste est filtrée
   onDelete,
   onSetDisabled,
+  focusId, // souhait à mettre en évidence (ouvert depuis un #souhait)
   onRequestEdit,
   onToggleReaction,
   openCommentsId,
@@ -252,8 +253,10 @@ export default function WishItem({
       style={dragStyle}
       {...dragAttributes}
       {...dragListeners}
+      data-wish-id={wish.id}
       className={
         "wish" +
+        (focusId === wish.id ? " is-focused" : "") +
         (variant === "card" ? " wish-as-card" : "") +
         (isDragging ? " is-dragging" : "") +
         (reservedByOther ? " is-reserved" : "") +

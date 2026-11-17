@@ -224,6 +224,29 @@ export default function Home() {
   const guardedGo = (next) => (next === "notes" ? go(next) : leaveNotes(() => go(next)));
   const guardedOpenList = (member) => leaveNotes(() => openList(member));
 
+  // Ouvre la liste d'un membre directement sur un souhait (depuis un #souhait
+  // des notes) : il est amené à l'écran et mis en évidence un instant.
+  const [focusWish, setFocusWish] = useState(null);
+  function openWish(member, wishId) {
+    leaveNotes(() => {
+      openList(member);
+      setFocusWish(wishId);
+    });
+  }
+  useEffect(() => {
+    if (!focusWish || section !== "lists") return;
+    const t1 = setTimeout(() => {
+      document
+        .querySelector(`[data-wish-id="${focusWish}"]`)
+        ?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 120);
+    const t2 = setTimeout(() => setFocusWish(null), 2800);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [focusWish, section]);
+
   // Charge les couleurs partagées une fois connecté (et les rend actives via
   // avatarColor dans toute l'appli).
   useEffect(() => {
@@ -374,6 +397,14 @@ export default function Home() {
   const giftCount = giftGroups.reduce((n, g) => n + g.items.length, 0);
   const received = (wishesApi.wishes[me] || []).filter((w) => w.disabled);
 
+  // Souhaits citables avec « # » dans les notes : ceux encore dans les listes.
+  const citableWishes = [];
+  for (const m of MEMBERS) {
+    for (const w of wishesApi.wishes[m] || []) {
+      if (!w.disabled && w.name) citableWishes.push({ id: w.id, name: w.name, member: m });
+    }
+  }
+
   // Props communes à chaque souhait (liste ou carrousel).
   const itemProps = {
     member: active,
@@ -402,6 +433,7 @@ export default function Home() {
       }
     },
     onUnreserve: resa.unreserve,
+    focusId: focusWish,
   };
 
   // Étapes de la visite guidée (cibles repérées par data-tour).
@@ -474,7 +506,8 @@ export default function Home() {
       text: (
         <>
           Tes <strong>notes</strong>, rien qu'à toi&nbsp;: personne d'autre ne peut les lire.
-          Tape <strong>@</strong> pour citer quelqu'un, puis touche son nom pour ouvrir sa liste.
+          Tape <strong>@</strong> pour citer quelqu'un ou <strong>#</strong> pour citer un
+          souhait, puis touche-le pour y aller.
         </>
       ),
     },
@@ -520,6 +553,7 @@ export default function Home() {
     onAddComment: wishesApi.addComment,
     onDeleteComment: requestDeleteComment,
     onClose: closeComments,
+    onMention: openList,
   };
 
   return (
@@ -732,6 +766,8 @@ export default function Home() {
             onSave={saveNotes}
             onRetry={loadNotes}
             onMention={guardedOpenList}
+            wishes={citableWishes}
+            onWish={openWish}
           />
         )}
 

@@ -3959,3 +3959,74 @@ button.reserve {
 @media (min-width: 900px) {
   .notes-bar { bottom: 16px; }
 }
+
+/* ------------------------------------------------------------------
+   19. #souhaits dans les notes, @ et liens dans les commentaires
+   ------------------------------------------------------------------ */
+/* #Souhait : couleur de son propriétaire, souligné en pointillés (aucun
+   espacement ajouté, pour rester aligné avec le curseur). */
+.wish-ref {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  line-height: inherit;
+  color: var(--c);
+  text-decoration: underline dotted;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+.wish-ref:hover { text-decoration-style: solid; }
+
+/* Suggestions de souhaits : nom + liste d'origine */
+.mention-list-wide { min-width: 220px; max-width: min(320px, calc(100vw - 48px)); }
+.mention-option-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.mention-option-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.mention-option-text small { color: var(--faint); font-size: 12px; }
+
+/* Souhait ouvert depuis un #souhait : brièvement mis en évidence */
+.wish.is-focused {
+  animation: wish-focus 1.2s ease 2;
+}
+@keyframes wish-focus {
+  0%, 100% { box-shadow: none; }
+  40% { box-shadow: 0 0 0 3px var(--accent), 0 0 0 8px var(--accent-soft); }
+}
+
+/* Commentaires : suggestions « @ » au-dessus du champ */
+.comment-form { flex-wrap: wrap; }
+.comment-form .field { flex: 1; min-width: 0; }
+.comment-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-basis: 100%;
+}
+.comment-suggest-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.comment-text .mention { font-weight: 600; }
+.comment-text .note-link { overflow-wrap: anywhere; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wish.is-focused {
+    animation: none;
+    box-shadow: 0 0 0 3px var(--accent);
+  }
+}
